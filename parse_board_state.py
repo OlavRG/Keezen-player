@@ -7,7 +7,10 @@ def parse_board_state(board_state):
     player = Player(board_state["my_color"])
     hand = board_state["hand"]
     # get unique colors with same order as board_state
-    player_colors = list(dict.fromkeys(board_state["pawns"]))
+    player_colors = []
+    for pawn in board_state["pawns"]:
+        if pawn["color"] not in player_colors:
+            player_colors.append(pawn["color"])
 
     my_pawns = []
     other_pawns = []

@@ -8,3 +8,12 @@ class Pawn():
         self.finish = finish
         self.is_protected = protected
 
+    def move(self, move_value):
+        board_size = 64
+        self.position += move_value
+        if self.position > board_size - 1:
+            self.finish = True
+        elif self.position < 0:
+            self.position = (self.position + board_size) % board_size
+        else:
+            pass

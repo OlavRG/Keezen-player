@@ -8,9 +8,9 @@
 
 def spawn_at_occupied_base(my_pawn, my_other_pawns):
     legal = True
-    if my_pawn.position == 0:
+    if my_pawn.position == 0 and not my_pawn.home:
         for my_other_pawn in my_other_pawns:
-            if my_other_pawn.position == 0:
+            if my_other_pawn.position == 0 and not my_other_pawn.home:
                 legal = False
                 return legal
             else:

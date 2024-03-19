@@ -9,12 +9,10 @@ from board_state_format import board_state
 from parse_board_state import parse_board_state
 import copy
 from is_card_play_legal import is_card_play_legal
-import numpy as np
 
 
 # test the outcome of a play without playing it (like playing it in your mind)
-def test_play(player, my_pawns, other_pawns, hand):
-    highest_board_value = 0
+def test_play(player, my_pawns, other_pawns, hand, board_size):
     test_player = copy.deepcopy(player)
     my_test_pawns = copy.deepcopy(my_pawns)
     other_test_pawns = copy.deepcopy(other_pawns)
@@ -31,19 +29,16 @@ def test_play(player, my_pawns, other_pawns, hand):
                     my_pawn.position = 0
                 else:
                     move_value = 1
-                    my_pawn.position += 1
+                    my_pawn.move(move_value, board_size)
             if card == '2':
                 move_value = 2
-                if not my_pawn.home:
-                    my_pawn.position += move_value
+                my_pawn.move(move_value, board_size)
             if card == '3':
                 move_value = 3
-                if not my_pawn.home:
-                    my_pawn.position += move_value
+                my_pawn.move(move_value, board_size)
             if card == '4':
                 move_value = -4
-                if not my_pawn.home:
-                    my_pawn.position += move_value
+                my_pawn.move(move_value, board_size)
 
             # check if move is legal
             card_play_is_legal = is_card_play_legal(my_pawn, my_other_test_pawns, other_test_pawns, move_value)
@@ -58,7 +53,7 @@ def test_play(player, my_pawns, other_pawns, hand):
             my_test_pawns = copy.deepcopy(my_pawns)
             other_test_pawns = copy.deepcopy(other_pawns)
             test_hand = copy.deepcopy(hand)
-
+    return card_plays_on_pawns_and_outcomes
 
 if __name__ == '__main__':
     # This is the main executable that imports all classes to run a game
@@ -66,7 +61,8 @@ if __name__ == '__main__':
     # import and parse board state, return pawn objects, hand object, player object
     [player, my_pawns, other_pawns, hand, player_colors] = parse_board_state(board_state)
     player_count = len(player_colors)
-    test_play(player, my_pawns, other_pawns, hand)
+    board_size = player_count * 16
+    card_plays_on_pawns_and_outcomes = test_play(player, my_pawns, other_pawns, hand, board_size)
 
     bla = 1
 """
