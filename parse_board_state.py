@@ -1,17 +1,17 @@
 
 from player import Player
 from pawn import Pawn
-
+from game_info import GameInfo
 
 def parse_board_state(board_state):
     player = Player(board_state["my_color"])
     hand = board_state["hand"]
-    # get unique colors with same order as board_state
+    # get unique colors with same order as board_state. This determines player order!
     player_colors = []
     for pawn in board_state["pawns"]:
         if pawn["color"] not in player_colors:
             player_colors.append(pawn["color"])
-
+    game_info = GameInfo(player_colors)
     my_pawns = []
     other_pawns = []
     for pawn in board_state["pawns"]:
@@ -29,5 +29,5 @@ def parse_board_state(board_state):
             position_relative_to_player_start = pawn["position"] + 16 * pawn_turn_relative_to_player
             other_pawns.append(Pawn(pawn["color"], position_relative_to_player_start, pawn["position"],
                                     pawn["home"], pawn["finish"], is_protected))
-    return player, my_pawns, other_pawns, hand, player_colors
+    return player, my_pawns, other_pawns, hand, game_info
 
