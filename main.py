@@ -12,7 +12,7 @@ from is_card_play_legal import is_card_play_legal
 
 
 # test the outcome of a play without playing it (like playing it in your mind)
-def test_play(player, my_pawns, other_pawns, hand, board_size):
+def test_all_possible_plays(player, my_pawns, other_pawns, hand, game_info):
     test_player = copy.deepcopy(player)
     my_test_pawns = copy.deepcopy(my_pawns)
     other_test_pawns = copy.deepcopy(other_pawns)
@@ -23,25 +23,25 @@ def test_play(player, my_pawns, other_pawns, hand, board_size):
     for card in test_hand:
         for my_pawn in my_test_pawns:
             my_other_test_pawns = [value for value in my_test_pawns if value != my_pawn]
-            if card == 'A':
-                if my_pawn.home:
-                    my_pawn.home = False
-                    my_pawn.position = 0
-                else:
-                    move_value = 1
-                    my_pawn.move(move_value, board_size)
-            if card == '2':
-                move_value = 2
-                my_pawn.move(move_value, board_size)
-            if card == '3':
-                move_value = 3
-                my_pawn.move(move_value, board_size)
-            if card == '4':
-                move_value = -4
-                my_pawn.move(move_value, board_size)
+            if card is '7':
+                for my_other_test_pawn in my_other_test_pawns:
+                    for move_1 in range(0,8):
+                        move_2 = 7 - move_1
+                        my_pawn.play_card_on_pawn(card, game_info, move_from_7 = move_1)
+                        my_other_test_pawn.play_card_on_pawn(card, game_info, move_from_7 = move_2)
+            elif card is 'J':
+                for other_test_pawn in other_test_pawns:
+                    position_1 = my_pawn.position
+                    position_2 = other_test_pawn.position
+                    my_pawn.play_card_on_pawn(card, game_info, jack_other_pawn_position=position_2)
+                    other_test_pawn.play_card_on_pawn(card, game_info, jack_other_pawn_position=position_1)
+            else:
+                my_pawn.play_card_on_pawn(card, game_info)
 
             # check if move is legal
-            card_play_is_legal = is_card_play_legal(my_pawn, my_other_test_pawns, other_test_pawns, move_value)
+            card_play_is_legal = is_card_play_legal(my_pawn, my_other_test_pawns, other_test_pawns, move_value,
+                                                    game_info)
+            # get board value
             board_value = 3
             card_plays_on_pawns_and_outcomes.append({"card": card, "primary_pawn": my_pawn,
                                                      "secondary_pawn": secondary_pawn, "primary_move": move_value,
@@ -59,10 +59,8 @@ if __name__ == '__main__':
     # This is the main executable that imports all classes to run a game
 
     # import and parse board state, return pawn objects, hand object, player object
-    [player, my_pawns, other_pawns, hand, player_colors] = parse_board_state(board_state)
-    player_count = len(player_colors)
-    board_size = player_count * 16
-    card_plays_on_pawns_and_outcomes = test_play(player, my_pawns, other_pawns, hand, board_size)
+    [player, my_pawns, other_pawns, hand, game_info] = parse_board_state(board_state)
+    card_plays_on_pawns_and_outcomes = test_play(player, my_pawns, other_pawns, hand, game_info)
 
     bla = 1
 """

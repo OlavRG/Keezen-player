@@ -1,14 +1,35 @@
 board_state = {"pawns": [
-     {"color":"Blue","position":0,"home":True,"finish":False},
-     {"color":"Orange","position":0,"home":True,"finish":False},
      {"color":"Orange","position":0,"home":False,"finish":False},
-     {"color":"Orange","position":1,"home":False,"finish":False},
-     {"color":"Orange","position":0,"home":True,"finish":False}],
+     {"color":"Orange","position":1,"home":False,"finish":False}],
     "hand": '4',
     "other_hands": [5, 5, 5],
     "my_color": "Orange",
     "card_history": ""
     }
+
+"""
+# test no going backwards over own protected pawn
+board_state = {"pawns": [
+     {"color":"Orange","position":0,"home":False,"finish":False},
+     {"color":"Orange","position":1,"home":False,"finish":False}],
+    "hand": '4',
+    "other_hands": [5, 5, 5],
+    "my_color": "Orange",
+    "card_history": ""
+    }
+"""
+
+# Test spawn at occupied base
+"""
+board_state = {"pawns": [
+     {"color":"Orange","position":0,"home":True,"finish":False},
+     {"color":"Orange","position":0,"home":False,"finish":False}],
+    "hand": 'K',
+    "other_hands": [5, 5, 5],
+    "my_color": "Orange",
+    "card_history": ""
+    }
+"""
 
 """"
 board_state = {"pawns": [
