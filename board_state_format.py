@@ -1,7 +1,8 @@
 board_state = {"pawns": [
-     {"color":"Orange","position":0,"home":False,"finish":False},
-     {"color":"Orange","position":1,"home":False,"finish":False}],
-    "hand": '4',
+     {"color":"Orange","position":30,"home":False,"finish":False},
+     {"color":"Orange","position":25,"home":False,"finish":False},
+     {"color": "Red", "position": 1, "home": False, "finish": False}],
+    "hand": 'X5K',
     "other_hands": [5, 5, 5],
     "my_color": "Orange",
     "card_history": ""

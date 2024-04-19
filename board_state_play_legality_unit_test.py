@@ -75,8 +75,8 @@ board_state_move_back_out_of_finish = {"pawns": [
 
 # Test spawn at occupied base. Should return False
 board_state_spawn_at_occupied_base = {"pawns": [
-     {"color":"Orange","position":0,"home":False,"finish":False},
-     {"color":"Orange","position":0,"home":True,"finish":False}],
+     {"color":"Orange","position":0,"home":True,"finish":False},
+     {"color":"Orange","position":0,"home":False,"finish":False}],
     "hand": 'A',
     "other_hands": [5, 5, 5],
     "my_color": "Orange",
@@ -85,7 +85,7 @@ board_state_spawn_at_occupied_base = {"pawns": [
 
 
 # Test card play with no pawns on the board when card is not a K or A, but regular move card. Should return False
-board_state_no_pawn_on_board_play_move_card = {"pawns": [
+board_state_play_move_card_with_no_pawn_on_board = {"pawns": [
      {"color":"Orange","position":0,"home":True,"finish":False}],
     "hand": '6',
     "other_hands": [5, 5, 5],
@@ -129,7 +129,7 @@ board_state_play_jack_on_single_pawn = {"pawns": [
 # Test play jack on own pawn at position_0. Should return False
 board_state_play_jack_on_own_pawn_at_0 = {"pawns": [
      {"color":"Orange","position":0,"home":False,"finish":False},
-     {"color":"Orange","position":2,"home":False,"finish":False}],
+     {"color":"Blue","position":2,"home":False,"finish":False}],
     "hand": 'J',
     "other_hands": [5, 5, 5],
     "my_color": "Orange",
@@ -140,7 +140,7 @@ board_state_play_jack_on_own_pawn_at_0 = {"pawns": [
 # Test play jack on own pawn at finish. Should return False
 board_state_play_jack_on_own_pawn_at_finish = {"pawns": [
      {"color":"Orange","position":1,"home":False,"finish":True},
-     {"color":"Orange","position":2,"home":False,"finish":False}],
+     {"color":"Blue","position":2,"home":False,"finish":False}],
     "hand": 'J',
     "other_hands": [5, 5, 5],
     "my_color": "Orange",
@@ -169,6 +169,15 @@ board_state_play_jack_on_opponent_finished_pawn = {"pawns": [
     "card_history": ""
     }
 
+# Test play king on pawn not at home. Should return False
+board_state_play_king_on_pawn_not_at_home = {"pawns": [
+     {"color":"Blue","position":1,"home":False,"finish":True},
+     {"color":"Orange","position":0,"home":False,"finish":False}],
+    "hand": 'K',
+    "other_hands": [5, 5, 5],
+    "my_color": "Orange",
+    "card_history": ""
+    }
 
 """"
 board_state = {"pawns": [
@@ -195,4 +204,3 @@ board_state = {"pawns": [
     }
 """
 
-print (board_state["pawns"])
