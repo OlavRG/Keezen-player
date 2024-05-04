@@ -17,7 +17,7 @@ def play_any_card_on_a_pawn_and_resolve_outcome(card, my_pawn, my_other_pawns, o
     position_1 = my_pawn.position
     if move_1:
         move_value = move_1
-        move_2 = 7 - move_1
+        move_2 = card.move_value - move_1
     else:
         move_value = card.move_value
         move_2 = None
@@ -93,9 +93,17 @@ def test_all_possible_plays(player, my_pawns, other_pawns, hand, game_info):
         if not card.has_been_played:
             for my_pawn in my_pawns:
                 my_other_pawns = [value for value in my_pawns if value != my_pawn]
-                if card.rank == '7':
+                if card.is_splittable:
+                    play_any_card_on_a_pawn_and_resolve_outcome(card, my_pawn, my_other_pawns,
+                                                                other_pawns, game_info,
+                                                                card_plays_on_pawns_and_outcomes,
+                                                                target_pawn=None, move_1=None)
+                    # reset pawns back to original position
+                    reset_to_previous_state(my_backup_pawns, my_pawns)
+                    reset_to_previous_state(other_backup_pawns, other_pawns)
+                    card.set_play_status(False)
                     for my_other_pawn in my_other_pawns:
-                        for move_1 in range(1, 8):
+                        for move_1 in range(1, card.move_value):
                             play_any_card_on_a_pawn_and_resolve_outcome(card, my_pawn, my_other_pawns,
                                                                         other_pawns, game_info,
                                                                         card_plays_on_pawns_and_outcomes,

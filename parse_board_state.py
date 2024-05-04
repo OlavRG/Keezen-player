@@ -1,8 +1,10 @@
+import copy
 
 from player import Player
 from card import Card
 from pawn import Pawn
 from game_info import GameInfo
+import random
 
 def parse_board_state(board_state):
     player = Player(board_state["my_color"])
@@ -38,3 +40,33 @@ def parse_board_state(board_state):
                                     pawn["home"], pawn["finish"], is_protected))
     return player, my_pawns, other_pawns, hand, game_info
 
+
+def create_starting_board_state(n_players):
+    # currently 8 colors and hence 8 players are supported
+    colors = ['red', 'white', 'blue', 'orange', 'black', 'green', 'magenta', 'cyan']
+    board_states_start = [{} for iterator in range(0, n_players)]
+    deck = list(n_players * 'A23456789XJQK')
+    random.shuffle(deck)
+    hands = [[] for iterator in range(0,n_players)]
+    pawns = []
+    for player in range(0,n_players):
+        hands[player].append(deck.pop())
+        hands[player].append(deck.pop())
+        hands[player].append(deck.pop())
+        hands[player].append(deck.pop())
+        hands[player].append(deck.pop())
+        board_states_start[player]["hand"] = ''.join(hands[player])
+        board_states_start[player]["other_hands"] = [5] * (n_players - 1)
+        board_states_start[player]["my_color"] = colors[player]
+        board_states_start[player]["card_history"] = ""
+        pawns.append({"color": colors[player], "position": 0, "home": True, "finish": False})
+        pawns.append({"color": colors[player], "position": 1, "home": True, "finish": False})
+        pawns.append({"color": colors[player], "position": 2, "home": True, "finish": False})
+        pawns.append({"color": colors[player], "position": 3, "home": True, "finish": False})
+        board_states_start[player]["pawns"] = pawns
+
+    return board_states_start
+
+bla = create_starting_board_state(6)
+
+bla =1

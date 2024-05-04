@@ -11,12 +11,13 @@ from card_play_logic import test_all_possible_plays
 from card_play_logic import test_all_possible_follow_up_plays
 from card_play_logic import pick_play_with_highest_eventual_board_value
 from card import Card
-from board_state_niche_tester import board_state
+import board_state_niche_tester
 
 if __name__ == '__main__':
     # This is the main executable that imports all classes to run a game
 
     # import and parse board state, return pawn objects, hand object, player object
+    board_state = board_state_niche_tester.board_state_walk_into_finish_without_follow_up_move
     [player, my_pawns, other_pawns, hand, game_info] = parse_board_state(board_state)
 
     all_non_dead_plays = []
@@ -59,7 +60,7 @@ if __name__ == '__main__':
 
     print_plays_properly(all_non_dead_plays)
 
-    # next: for board_state_format all_non_dead_plays and all_dead_plays are OK! For Niche: why is 7 not played in all_dead_plays?
+    # next: running into the finish with last pawn leaves no legal follow up plays. card_play_logic line 179 therefor does not include it in all_dead_plays. A check should be made to see if all pawns are finished, and then include the play.
 
     bla = 1
 

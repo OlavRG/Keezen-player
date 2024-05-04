@@ -89,8 +89,11 @@ class Pawn():
             else:
                 move_value = 1
                 self.move(move_value, game_info.board_size)
-        elif card.rank == '7':
-            move_value = move_from_7
+        elif card.is_splittable:
+            if move_from_7:
+                move_value = move_from_7
+            else:
+                move_value = card.move_value
             self.move(move_value, game_info.board_size)
         elif card.rank == 'J':
             self.position_at_start_of_turn = self.position

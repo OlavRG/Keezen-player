@@ -32,16 +32,16 @@ board_state = {"pawns": [
     }
 """
 
-""""
-board_state = {"pawns": [
+
+board_state_start = {"pawns": [
      {"color":"Blue","position":0,"home":True,"finish":False},
      {"color":"Blue","position":1,"home":True,"finish":False},
      {"color":"Blue","position":2,"home":True,"finish":False},
      {"color":"Blue","position":3,"home":True,"finish":False},
      {"color":"Orange","position":0,"home":True,"finish":False},
-     {"color":"Orange","position":1,"home":False,"finish":False},
+     {"color":"Orange","position":1,"home":True,"finish":False},
      {"color":"Orange","position":2,"home":True,"finish":False},
-     {"color":"Orange","position":0,"home":False,"finish":False},
+     {"color":"Orange","position":3,"home":True,"finish":False},
      {"color":"Red","position":0,"home":True,"finish":False},
      {"color":"Red","position":1,"home":True,"finish":False},
      {"color":"Red","position":2,"home":True,"finish":False},
@@ -55,6 +55,6 @@ board_state = {"pawns": [
     "my_color": "Orange",
     "card_history": ""
     }
-"""
+
 
 print (board_state["pawns"])
