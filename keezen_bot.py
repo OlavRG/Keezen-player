@@ -5,19 +5,20 @@ Created on Sun Jul 24 11:22:10 2022
 @author: olavg
 """
 
-from board_state_format import board_state
-from parse_board_state import parse_board_state
+from board_state_logic import parse_board_state
 from card_play_logic import test_all_possible_plays
 from card_play_logic import test_all_possible_follow_up_plays
 from card_play_logic import pick_play_with_highest_eventual_board_value
+from card_play_logic import card_play_to_dict
 from card import Card
 import board_state_niche_tester
 
-if __name__ == '__main__':
+
+def keezen_bot(board_state):
     # This is the main executable that imports all classes to run a game
 
-    # import and parse board state, return pawn objects, hand object, player object
-    board_state = board_state_niche_tester.board_state_walk_into_finish_without_follow_up_move
+    # Parse board state, return pawn objects, hand object, player object
+    # board_state = board_state_niche_tester.board_state_blocked
     [player, my_pawns, other_pawns, hand, game_info] = parse_board_state(board_state)
 
     all_non_dead_plays = []
@@ -27,7 +28,8 @@ if __name__ == '__main__':
     turn_1_legal_plays = [card_play for card_play in turn_1_plays if card_play[-1]["card_play_is_legal"]]
     if not turn_1_legal_plays:
         # Discard hand
-        Final_play = None
+        all_non_dead_plays = []
+        all_dead_plays = []
     else:
         # all other turns
         for turn in range(2, len(hand)+1):
@@ -54,16 +56,18 @@ if __name__ == '__main__':
         for play in plays:
             for turn in range(0, len(play)):
                 print(play[turn]["card"].rank + ' on ' + str(play[turn]["primary_pawn"].position))
+                if turn == len(play)-1: print('Board value: ' + str(play[turn]["board_value"]) + '\n')
                 if turn == len(play)-1: print('end play\n')
                 else: pass
         print('len(plays) = ' + str(len(plays)))
 
     print_plays_properly(all_non_dead_plays)
+    # next: it looks like the bot does not play ideally with a starting board_state and hand like 'K46A9'. check it.
+    # next: add preference for positions that are not in move-range of enemy pawns
 
-    # next: running into the finish with last pawn leaves no legal follow up plays. card_play_logic line 179 therefor does not include it in all_dead_plays. A check should be made to see if all pawns are finished, and then include the play.
+    final_play_dict = card_play_to_dict(Final_play)
 
-    bla = 1
-
+    return final_play_dict
 
 """
                 if not move_is_legal(bla):

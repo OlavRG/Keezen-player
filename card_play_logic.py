@@ -11,6 +11,13 @@ def check_for_tackled_pawn_and_move_them_home(my_pawn, my_pawns, other_pawns):
             target_pawn.move_home()
 
 
+def create_card_play(card, my_pawn, target_pawn, move_value, card_play_is_legal, board_value):
+    return {"card": card, "primary_pawn": my_pawn,
+            "secondary_pawn": target_pawn, "primary_move": move_value,
+            "card_play_is_legal": card_play_is_legal,
+            "board_value": board_value}
+
+
 def play_any_card_on_a_pawn_and_resolve_outcome(card, my_pawn, my_other_pawns, other_pawns, game_info,
                                                 card_plays_on_pawns_and_outcomes,
                                                 target_pawn=None, move_1=None):
@@ -69,10 +76,8 @@ def play_any_card_on_a_pawn_and_resolve_outcome(card, my_pawn, my_other_pawns, o
 
     # get board value
     board_value = get_board_value([my_pawn] + my_other_pawns, other_pawns, game_info)
-    card_plays_on_pawns_and_outcomes.append([{"card": card, "primary_pawn": my_pawn,
-                                              "secondary_pawn": target_pawn, "primary_move": move_value,
-                                              "card_play_is_legal": card_play_is_legal,
-                                              "board_value": board_value}])
+    card_plays_on_pawns_and_outcomes.append([create_card_play(card, my_pawn, target_pawn,
+                                                              move_value, card_play_is_legal, board_value)])
 
     return card_plays_on_pawns_and_outcomes, [my_pawn] + my_other_pawns, other_pawns
 
@@ -177,6 +182,9 @@ def test_all_possible_follow_up_plays(player, my_pawns, other_pawns, hand, game_
         if not legal_new_card_plays_from_single_previous_play:
             all_dead_plays_incl_illegal = test_next_round_card_plays(player, my_pawns, other_pawns, game_info, card_play)
             all_dead_plays += [play for play in all_dead_plays_incl_illegal if play[-1]["card_play_is_legal"]]
+            # Putting the last pawn in finish leaves no legal new card plays. Hence we check separately for a winning move
+            if all([pawn.finish for pawn in my_pawns]):
+                all_dead_plays += [card_play]
         else:
             pass
 
@@ -193,21 +201,6 @@ def test_all_possible_follow_up_plays(player, my_pawns, other_pawns, hand, game_
     # filter all illegal plays
     all_legal_card_plays = [card_play for card_play in all_card_plays if card_play[-1]["card_play_is_legal"]]
 
-    """ # this part should be redundant since we check immediately after creating new turn plays
-    # if previous turn plays has no follow up, check the value of its next round
-    for previous_turn_legal_play in previous_turn_legal_plays:
-        previous_turn_legal_play_follow_ups = 0
-        for legal_card_play in all_legal_card_plays:
-            if legal_card_play[:-1] == previous_turn_legal_play:
-                previous_turn_legal_play_follow_ups += 1
-            else:
-                previous_turn_legal_play_follow_ups += 0
-        if not previous_turn_legal_play_follow_ups:
-            all_dead_plays.append(test_next_round_card_plays(previous_turn_legal_play))
-        else:
-            pass
-    """
-
     return all_legal_card_plays, all_dead_plays
 
 
@@ -221,3 +214,63 @@ def pick_play_with_highest_eventual_board_value(all_plays):
         else:
             pass
     return best_play
+
+
+def card_play_to_dict(card_play):
+    # check if there is any legal play
+    if not card_play:
+        card_play_dict = None
+        return card_play_dict
+    else:
+        card_play = card_play[0]
+    if card_play["secondary_pawn"]:
+        secondary_pawn_color = card_play["secondary_pawn"].color
+        secondary_pawn_position = card_play["secondary_pawn"].position_from_own_start
+    else:
+        secondary_pawn_color = None
+        secondary_pawn_position = None
+    card_play_dict = {"card": card_play["card"].rank,
+                      "primary_pawn_color": card_play["primary_pawn"].color,
+                      "primary_pawn_position": card_play["primary_pawn"].position_from_own_start,
+                      "secondary_pawn_color": secondary_pawn_color,
+                      "secondary_pawn_position": secondary_pawn_position,
+                      "primary_move": card_play["primary_move"]}
+    return card_play_dict
+
+
+def check_if_client_card_play_is_legal(player, my_pawns, other_pawns, hand, game_info, card_play_dict):
+    # If the client returned None, it means they can play no card. Test this first
+    if not card_play_dict:
+        pass
+    else:
+        pass
+
+    legal = False
+    legal_card = False
+    legal_color = False
+    legal_pawn = False
+
+    # First check if the player actually is the right color and has the card in hand
+    if card_play_dict["card"] in [card.rank for card in hand]:
+        legal_card = True
+    if card_play_dict["primary_pawn_color"] == player.color:
+        legal_color = True
+
+    # check if the player has a pawn on the position of play
+    legal_pawn = any([True for pawn in my_pawns if pawn.position_from_own_start == card_play_dict["primary_pawn_position"]])
+
+    card = next((card for card in hand if card.rank == card_play_dict["card"]), None)
+    my_pawn = next((pawn for pawn in my_pawns if pawn.position_from_own_start == card_play_dict["primary_pawn_position"]), None)
+    my_other_pawns = [value for value in my_pawns if value != my_pawn]
+    target_pawn = next((pawn for pawn in my_pawns + other_pawns if
+                        pawn.position_from_own_start == card_play_dict["secondary_pawn_position"] and
+                        pawn.color == card_play_dict["secondary_pawn_color"]
+                        ), None)
+    if card.is_splittable and target_pawn:
+        move_1 = card_play_dict["primary_move"]
+    else:
+        move_1 = None
+
+    card_play = play_any_card_on_a_pawn_and_resolve_outcome(card, my_pawn, my_other_pawns, other_pawns, game_info,
+                                                            [], target_pawn, move_1)[0]
+    return card_play[0][0]["card_play_is_legal"]

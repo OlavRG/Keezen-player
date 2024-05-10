@@ -1,7 +1,10 @@
-import socket
 import _thread
 import json
-from parse_board_state import create_starting_board_state
+from board_state_logic import create_starting_board_state
+from board_state_logic import parse_board_state
+from card_play_logic import test_all_possible_plays
+from card_play_logic import card_play_to_dict
+import network
 
 def read_pos(position):
     position = position.split(",")
@@ -42,36 +45,34 @@ def threaded_client(conn, player):
     conn.close()
 
 
-def establish_connections(n_clients):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        server_IP = socket.gethostbyname(socket.gethostname())  # local IP address "192.168.1.109"
-        port = 5555
-
-        try:
-            s.bind((server_IP, port))
-        except socket.error as e:
-            str(e)
-
-        s.listen(2)
-        print("IP is " + str(server_IP) + ", port: " + str(port))
-        print("Waiting for a connection, Server Started")
-
-        client_sockets = [None] * n_clients
-        for client in range(0, n_clients):
-            conn, addr = s.accept()
-            print("Connected to:", addr)
-            client_sockets[client] = (conn, addr, client)
-        return client_sockets
-
-n_clients = 2
-client_sockets = establish_connections(n_clients)
+n_clients = 1
+initial_socket = network.ServerNetwork()
+sockets_to_clients = initial_socket.establish_connections(n_clients)
 board_states_start = create_starting_board_state(n_clients)
 
-for client in n_clients:
-    board_states_start_serialized = json.dumps(board_states_start[client]).encode("utf-8")
-    client_sockets[client][0].sendall(board_states_start_serialized)
-    client_move = json.loads(client_sockets[client][0].recv(2048).decode("utf-8"))
+for client in range(n_clients):
+    sockets_to_clients[client].send(board_states_start[client])
+    client_card_play_dict = sockets_to_clients[client].receive()
+
+    [player, my_pawns, other_pawns, hand, game_info] = parse_board_state(board_states_start[client])
+
+    # Make a list of all possible plays and check if the clients move is in it
+    possible_card_plays = test_all_possible_plays(player, my_pawns, other_pawns, hand, game_info)
+    legal_possible_card_plays = [card_play for card_play in possible_card_plays if card_play[-1]["card_play_is_legal"]]
+    legal_possible_card_play_dicts = [map(card_play_to_dict, legal_possible_card_plays)]
+    if client_card_play_dict not in legal_possible_card_play_dicts:
+        # Discard hand
+        hand = []
+    else:
+        # resolve client_card_play
+        client_card_play_index = legal_possible_card_play_dicts.index(client_card_play_dict)
+        client_card_play = legal_possible_card_plays[client_card_play_index]
+
+
     bla = 0
+
+    # next: implement check_if_client_card_play_is_legal in server using existing card_play_logic functions.
+    # next: if the card play is legal, the board state should be updated accordingly --> make reverse parse_board_state function
 
 """
     currentPlayer = 0

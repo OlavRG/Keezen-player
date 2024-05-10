@@ -5,14 +5,14 @@
 board_state_blocked = {"pawns": [
      {"color":"Orange","position": 8, "home": False,"finish": False},
      {"color": "Red", "position": 0, "home": False, "finish": False}],
-    "hand": '337',
+    "hand": '267',
     "other_hands": [5, 5, 5],
     "my_color": "Orange",
     "card_history": ""
     }
 
 # Best play: X. Zeker weten dat hij direct de finish in loopt ookal is er geen vervolg zet.
-board_state_walk_into_finish_without_follow_up_move = {"pawns": [
+board_state_walk_last_pawn_into_finish = {"pawns": [
      {"color":"Orange","position": 25, "home": False,"finish": False},
      {"color": "Red", "position": 0, "home": False, "finish": False}],
     "hand": 'X33',

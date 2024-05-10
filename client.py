@@ -1,15 +1,16 @@
 import pygame
-from network import Network
-
-width = 500
-height = 500
-win = pygame.display.set_mode((width, height))
-pygame.display.set_caption("Client")
-
-clientNumber = 0
+from network import ClientNetwork
+from keezen_bot import keezen_bot
 
 
-class Player():
+def open_display():
+    width = 500
+    height = 500
+    win = pygame.display.set_mode((width, height))
+    pygame.display.set_caption("Client")
+
+
+class Player:
     def __init__(self, x, y, width, height, color):
         self.x = x
         self.y = y
@@ -60,9 +61,13 @@ def redrawWindow(win,player, player2):
 
 
 def main(server_IP):
-    n = Network(server_IP)
+    n = ClientNetwork(server_IP)
     board_state = n.get_board_state()
+    card_play = keezen_bot(board_state)
+    n.send(card_play)
+    card_play_approved = n.receive()
 
+    bla = 1
 """
     run = True
     n = Network()
