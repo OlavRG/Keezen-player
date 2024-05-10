@@ -1,6 +1,6 @@
 import _thread
 import json
-from board_state_logic import create_starting_board_state
+from board_state_logic import create_players_cards_and_pawns
 from board_state_logic import parse_board_state
 from card_play_logic import test_all_possible_plays
 from card_play_logic import card_play_to_dict
@@ -48,7 +48,7 @@ def threaded_client(conn, player):
 n_clients = 1
 initial_socket = network.ServerNetwork()
 sockets_to_clients = initial_socket.establish_connections(n_clients)
-board_states_start = create_starting_board_state(n_clients)
+players, deck, game_info = create_players_cards_and_pawns(n_clients)
 
 for client in range(n_clients):
     sockets_to_clients[client].send(board_states_start[client])
@@ -59,7 +59,7 @@ for client in range(n_clients):
     # Make a list of all possible plays and check if the clients move is in it
     possible_card_plays = test_all_possible_plays(player, my_pawns, other_pawns, hand, game_info)
     legal_possible_card_plays = [card_play for card_play in possible_card_plays if card_play[-1]["card_play_is_legal"]]
-    legal_possible_card_play_dicts = [map(card_play_to_dict, legal_possible_card_plays)]
+    legal_possible_card_play_dicts = list(map(card_play_to_dict, legal_possible_card_plays))
     if client_card_play_dict not in legal_possible_card_play_dicts:
         # Discard hand
         hand = []
@@ -71,8 +71,7 @@ for client in range(n_clients):
 
     bla = 0
 
-    # next: implement check_if_client_card_play_is_legal in server using existing card_play_logic functions.
-    # next: if the card play is legal, the board state should be updated accordingly --> make reverse parse_board_state function
+    # next: create a functions that makes a board state per player from the player, card, and pawn objects.
 
 """
     currentPlayer = 0

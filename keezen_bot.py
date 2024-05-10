@@ -62,7 +62,6 @@ def keezen_bot(board_state):
         print('len(plays) = ' + str(len(plays)))
 
     print_plays_properly(all_non_dead_plays)
-    # next: it looks like the bot does not play ideally with a starting board_state and hand like 'K46A9'. check it.
     # next: add preference for positions that are not in move-range of enemy pawns
 
     final_play_dict = card_play_to_dict(Final_play)
