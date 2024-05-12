@@ -18,16 +18,16 @@ def create_card_play(card, my_pawn, target_pawn, move_value, card_play_is_legal,
             "board_value": board_value}
 
 
-def play_any_card_on_a_pawn_and_resolve_outcome(card, my_pawn, my_other_pawns, other_pawns, game_info,
-                                                card_plays_on_pawns_and_outcomes,
-                                                target_pawn=None, move_1=None):
+def play_any_card_on_a_pawn_and_resolve_outcome(card: object, my_pawn: object, my_other_pawns: object, other_pawns: object, game_info: object,
+                                                card_plays_on_pawns_and_outcomes: object,
+                                                target_pawn: object = None, move_1: object = None) -> object:
     position_1 = my_pawn.position
     if move_1:
         move_value = move_1
         move_2 = card.move_value - move_1
     else:
         move_value = card.move_value
-        move_2 = None
+        move_2 = 0
 
     if target_pawn:
         position_2 = target_pawn.position

@@ -6,6 +6,7 @@ from pawn import Pawn
 from game_info import GameInfo
 import random
 
+
 def parse_board_state(board_state):
     player = Player(board_state["my_color"])
     hand = []
@@ -41,7 +42,7 @@ def parse_board_state(board_state):
     return player, my_pawns, other_pawns, hand, game_info
 
 
-def create_players_cards_and_pawns(n_players):
+def create_players_and_cards_and_pawns(n_players):
     # currently 8 colors and hence 8 players are supported
     colors = ['red', 'white', 'blue', 'orange', 'black', 'green', 'magenta', 'cyan']
     game_info = GameInfo(colors)
@@ -50,7 +51,7 @@ def create_players_cards_and_pawns(n_players):
     pawns = []
     players = []
     for player in range(0, n_players):
-        players[player] = Player(colors[player])
+        players.append(Player(colors[player]))
         players[player].hand.append(deck.pop())
         players[player].hand.append(deck.pop())
         players[player].hand.append(deck.pop())
@@ -62,6 +63,51 @@ def create_players_cards_and_pawns(n_players):
         players[player].pawns.append(Pawn(colors[player], 0, 0, home=True, finish=False, protected=True))
 
     return players, deck, game_info
+
+
+def create_board_states_per_client(players, deck, game_info):
+    board_states = [{} for iterator in range(0, len(players))]
+    hands = [[] for iterator in range(0, len(players))]
+    other_hands = [[] for iterator in range(0, len(players))]
+    pawns = []
+    for n_player in range(0, len(players)):
+        hands[n_player] = ''.join(card.rank for card in players[n_player].hand)
+        board_states[n_player]["hand"] = hands[n_player]
+        other_hands[n_player] = [len(any_player.hand) for any_player in players if any_player != players[n_player]]
+        board_states[n_player]["other_hands"] = other_hands[n_player]
+        board_states[n_player]["my_color"] = players[n_player].color
+        board_states[n_player]["card_history"] = ""
+        for pawn in players[n_player].pawns:
+            pawns.append({"color": pawn.color, "position": pawn.position_from_own_start,
+                          "home": pawn.home, "finish": pawn.finish})
+        board_states[n_player]["pawns"] = pawns
+
+    # next: add card_history per player color
+    # next: cards left in deck should be added to board state format
+    return board_states
+
+board_state_start = {"pawns": [
+     {"color":"Blue","position":0,"home":True,"finish":False},
+     {"color":"Blue","position":1,"home":True,"finish":False},
+     {"color":"Blue","position":2,"home":True,"finish":False},
+     {"color":"Blue","position":3,"home":True,"finish":False},
+     {"color":"Orange","position":0,"home":True,"finish":False},
+     {"color":"Orange","position":1,"home":True,"finish":False},
+     {"color":"Orange","position":2,"home":True,"finish":False},
+     {"color":"Orange","position":3,"home":True,"finish":False},
+     {"color":"Red","position":0,"home":True,"finish":False},
+     {"color":"Red","position":1,"home":True,"finish":False},
+     {"color":"Red","position":2,"home":True,"finish":False},
+     {"color":"Red","position":3,"home":True,"finish":False},
+     {"color":"White","position":0,"home":True,"finish":False},
+     {"color":"White","position":1,"home":True,"finish":False},
+     {"color":"White","position":2,"home":True,"finish":False},
+     {"color":"White","position":3,"home":True,"finish":False}],
+    "hand": 'A47JQ',
+    "other_hands": [5, 5, 5],
+    "my_color": "Orange",
+    "card_history": ""
+    }
 
 
 """
@@ -93,23 +139,5 @@ def create_starting_board_state(n_players):
 """
 
 
-def create_board_states(player, my_pawns, other_pawns, hand, game_info):
-    for player in range(0, game_info.player_count):
-        hands[player].append(deck.pop())
-        hands[player].append(deck.pop())
-        hands[player].append(deck.pop())
-        hands[player].append(deck.pop())
-        hands[player].append(deck.pop())
-        board_states_start[player]["hand"] = ''.join(hands[player])
-        board_states_start[player]["other_hands"] = [5] * (n_players - 1)
-        board_states_start[player]["my_color"] = colors[player]
-        board_states_start[player]["card_history"] = ""
-        pawns.append({"color": colors[player], "position": 0, "home": True, "finish": False})
-        pawns.append({"color": colors[player], "position": 1, "home": True, "finish": False})
-        pawns.append({"color": colors[player], "position": 2, "home": True, "finish": False})
-        pawns.append({"color": colors[player], "position": 3, "home": True, "finish": False})
-        board_states_start[player]["pawns"] = pawns
-
-    return board_states_start
 
 bla =1

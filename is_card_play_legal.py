@@ -9,7 +9,7 @@
 
 def play_jack_on_single_pawn(my_pawn):
     legal = True
-    if my_pawn.position == None:
+    if my_pawn.position == None: # position is set to None in card_play_logic to trigger this
         legal = False
         my_pawn.position = 0    # This is necessary to prevent the other tests from failing
         return legal
@@ -48,15 +48,13 @@ def spawn_at_occupied_base(my_pawn, my_other_pawns):
 def move_past_protected_pawn(my_pawn, my_other_pawns, other_pawns, move_value, game_info):
     legal = True
     for other_pawn in my_other_pawns + other_pawns:
-        if not other_pawn.is_protected:
-            pass
-        else:
+        if other_pawn.is_protected and not other_pawn.home:
             # pass or hit a protected pawn while moving forward
-            if my_pawn.position_at_start_of_turn < other_pawn.position <= my_pawn.position:
+            if my_pawn.position_at_start_of_turn < other_pawn.position <= my_pawn.position and move_value > 0:
                 legal = False
                 return legal
             # pass or hit a protected pawn (except own at 0) while moving backward
-            elif my_pawn.position_at_start_of_turn > other_pawn.position >= my_pawn.position:
+            elif my_pawn.position_at_start_of_turn > other_pawn.position >= my_pawn.position and move_value < 0:
                 legal = False
                 return legal
             # pass own pawn at 0 while moving backward
@@ -65,6 +63,8 @@ def move_past_protected_pawn(my_pawn, my_other_pawns, other_pawns, move_value, g
                 return legal
             else:
                 pass
+        else:
+            pass
     return legal
 
 

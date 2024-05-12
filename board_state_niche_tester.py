@@ -20,3 +20,12 @@ board_state_walk_last_pawn_into_finish = {"pawns": [
     "my_color": "Orange",
     "card_history": ""
     }
+
+board_state_walk_backwards_and_into_finish = {"pawns": [
+     {"color":"Orange","position": 0, "home": True,"finish": False},
+     {"color": "Red", "position": 0, "home": False, "finish": False}],
+    "hand": 'K468',
+    "other_hands": [5, 5, 5],
+    "my_color": "Orange",
+    "card_history": ""
+    }

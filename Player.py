@@ -1,6 +1,7 @@
 
 class Player:
-    def __init__(self, my_color):
-        self.color = my_color
+    def __init__(self, color):
+        self.color = color
         self.pawns = []
         self.hand = []
+        self.discard_pile = []

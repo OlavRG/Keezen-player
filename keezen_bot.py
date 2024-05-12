@@ -61,7 +61,7 @@ def keezen_bot(board_state):
                 else: pass
         print('len(plays) = ' + str(len(plays)))
 
-    print_plays_properly(all_non_dead_plays)
+    # print_plays_properly([Final_play])
     # next: add preference for positions that are not in move-range of enemy pawns
 
     final_play_dict = card_play_to_dict(Final_play)
