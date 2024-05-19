@@ -2,7 +2,9 @@ from is_card_play_legal import is_card_play_legal
 import copy
 from board_value import get_board_value
 from card import Card
-
+from pawn import Pawn
+from game_info import GameInfo
+from player import Player
 
 def check_for_tackled_pawn_and_move_them_home(my_pawn, my_pawns, other_pawns):
     my_other_pawns = [value for value in my_pawns if value != my_pawn]
@@ -18,9 +20,9 @@ def create_card_play(card, my_pawn, target_pawn, move_value, card_play_is_legal,
             "board_value": board_value}
 
 
-def play_any_card_on_a_pawn_and_resolve_outcome(card: object, my_pawn: object, my_other_pawns: object, other_pawns: object, game_info: object,
-                                                card_plays_on_pawns_and_outcomes: object,
-                                                target_pawn: object = None, move_1: object = None) -> object:
+def play_any_card_on_a_pawn_and_resolve_outcome(card: Card, my_pawn: Pawn, my_other_pawns: [Pawn], other_pawns: [Pawn],
+                                                game_info: GameInfo, card_plays_on_pawns_and_outcomes: list,
+                                                target_pawn: Pawn = None, move_1: object = None) -> object:
     position_1 = my_pawn.position
     if move_1:
         move_value = move_1
@@ -274,3 +276,11 @@ def check_if_client_card_play_is_legal(player, my_pawns, other_pawns, hand, game
     card_play = play_any_card_on_a_pawn_and_resolve_outcome(card, my_pawn, my_other_pawns, other_pawns, game_info,
                                                             [], target_pawn, move_1)[0]
     return card_play[0][0]["card_play_is_legal"]
+
+
+def move_card_from_hand_to_discard_and_mark_in_player_card_history(player: Player, card: Card, discard_pile: list):
+    player.cards_played_this_round += card.rank
+    card_index_in_hand = player.hand.index(card)
+    discard_pile.append(player.hand.pop(card_index_in_hand))
+    return
+

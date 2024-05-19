@@ -1,7 +1,7 @@
 
 class Player:
-    def __init__(self, color):
+    def __init__(self, color: str):
         self.color = color
         self.pawns = []
         self.hand = []
-        self.discard_pile = []
+        self.cards_played_this_round = ''

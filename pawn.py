@@ -1,5 +1,5 @@
 
-class Pawn():
+class Pawn:
     def __init__(self, color, position, position_from_own_start, home, finish, protected):
         self.color = color
         self.position = position
@@ -12,8 +12,12 @@ class Pawn():
         self.finish_at_start_of_turn = finish
         self.is_protected = protected
 
+    def __str__(self):
+        return f'({self.color}, {self.position}, home: {self.home}, finish: {self.finish}, protected: {self.is_protected})'
+
     def reset_start_of_turn_bools_for_next_turn(self):
         self.position_at_start_of_turn = self.position
+        self.position_from_own_start_at_start_of_turn = self.position_from_own_start
         self.home_at_start_of_turn = self.home
         self.finish_at_start_of_turn = self.finish
 
@@ -121,3 +125,13 @@ class Pawn():
         else:
             self.move(card.move_value, game_info.board_size)
 
+    def set_position_relative_to_current_player(self, current_player, game_info):
+        if self.color != current_player.color:
+            pawn_turn_relative_to_player = (
+                        (game_info.player_colors.index(self.color) -
+                         game_info.player_colors.index(current_player.color)) %
+                        len(game_info.player_colors))
+            self.position = self.position_from_own_start + 16 * pawn_turn_relative_to_player % game_info.board_size
+            self.position_at_start_of_turn = self.position
+        elif self.color == current_player.color:
+            self.position = self.position_from_own_start

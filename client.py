@@ -63,8 +63,9 @@ def redrawWindow(win,player, player2):
 def main(server_IP):
     n = ClientNetwork(server_IP)
     all_pawns_of_current_player_are_in_finish = False
+    n.connect()
     while not all_pawns_of_current_player_are_in_finish:
-        board_state = n.get_board_state()
+        board_state = n.receive()
         card_play = keezen_bot(board_state)
         n.send(card_play)
         all_pawns_of_current_player_are_in_finish = n.receive()

@@ -31,12 +31,10 @@ def parse_board_state(board_state):
             my_pawns.append(Pawn(pawn["color"], pawn["position"], pawn["position"],
                                  pawn["home"], pawn["finish"], is_protected))
         elif pawn["color"] != player.color:
-            pawn_turn_relative_to_player = player_colors.index(pawn["color"]) - player_colors.index(player.color)
-            if pawn_turn_relative_to_player < 0:
-                pawn_turn_relative_to_player = pawn_turn_relative_to_player + len(player_colors)
+            pawn_turn_relative_to_player = ((player_colors.index(pawn["color"]) - player_colors.index(player.color)) %
+                                            len(player_colors))
             position_relative_to_player_start = pawn["position"] + 16 * pawn_turn_relative_to_player
-            position_relative_to_player_start = ((position_relative_to_player_start + game_info.board_size)
-                                                 % game_info.board_size)
+            position_relative_to_player_start = position_relative_to_player_start % game_info.board_size
             other_pawns.append(Pawn(pawn["color"], position_relative_to_player_start, pawn["position"],
                                     pawn["home"], pawn["finish"], is_protected))
     return player, my_pawns, other_pawns, hand, game_info
@@ -45,10 +43,12 @@ def parse_board_state(board_state):
 def create_players_and_cards_and_pawns(n_players):
     # currently 8 colors and hence 8 players are supported
     colors = ['red', 'white', 'blue', 'orange', 'black', 'green', 'magenta', 'cyan']
-    game_info = GameInfo(colors)
+    if n_players > len(colors):
+        raise ValueError("Number of players cannot be greater than 8. Currently only 8 player colors are defined.")
+    game_info = GameInfo(colors[:n_players])
     deck = list(map(Card, list(n_players * 'A23456789XJQK')))
     random.shuffle(deck)
-    pawns = []
+    discard_pile = []
     players = []
     for player in range(0, n_players):
         players.append(Player(colors[player]))
@@ -62,29 +62,32 @@ def create_players_and_cards_and_pawns(n_players):
         players[player].pawns.append(Pawn(colors[player], 0, 0, home=True, finish=False, protected=True))
         players[player].pawns.append(Pawn(colors[player], 0, 0, home=True, finish=False, protected=True))
 
-    return players, deck, game_info
+    return players, deck, discard_pile, game_info
 
 
 def create_board_states_per_client(players, deck, game_info):
     board_states = [{} for iterator in range(0, len(players))]
     hands = [[] for iterator in range(0, len(players))]
-    other_hands = [[] for iterator in range(0, len(players))]
+    other_hands_size = [[] for iterator in range(0, len(players))]
     pawns = []
+    card_history = ''
     for n_player in range(0, len(players)):
         hands[n_player] = ''.join(card.rank for card in players[n_player].hand)
         board_states[n_player]["hand"] = hands[n_player]
-        other_hands[n_player] = [len(any_player.hand) for any_player in players if any_player != players[n_player]]
-        board_states[n_player]["other_hands"] = other_hands[n_player]
+        other_hands_size[n_player] = [len(any_player.hand) for any_player in players if any_player != players[n_player]]
+        board_states[n_player]["other_hands"] = other_hands_size[n_player]
         board_states[n_player]["my_color"] = players[n_player].color
-        board_states[n_player]["card_history"] = ""
+        card_history += players[n_player].cards_played_this_round
+        board_states[n_player]["card_history"] = card_history
         for pawn in players[n_player].pawns:
-            pawns.append({"color": pawn.color, "position": pawn.position_from_own_start,
+            pawns.append({"color": pawn.color, "position": pawn.position_from_own_start % game_info.board_size,
                           "home": pawn.home, "finish": pawn.finish})
         board_states[n_player]["pawns"] = pawns
 
     # next: add card_history per player color
     # next: cards left in deck should be added to board state format
     return board_states
+
 
 board_state_start = {"pawns": [
      {"color":"Blue","position":0,"home":True,"finish":False},

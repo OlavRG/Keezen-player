@@ -28,15 +28,10 @@ class ClientNetwork(Network):
         super().__init__()
         self.server_IP = server_IP
         self.server_addr = (self.server_IP, self.port)
-        self.board_state = self.connect()
-
-    def get_board_state(self):
-        return self.board_state
 
     def connect(self):
         try:
             self.socket_obj.connect(self.server_addr)
-            return json.loads(self.socket_obj.recv(2048).decode("utf-8"))
         except socket.error as e:
             print(e)
 
