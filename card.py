@@ -37,9 +37,9 @@ class Card():
         if rank == 'K':
             self.move_value = 0
 
-
     def set_play_status(self, is_played):
         if isinstance(is_played, bool):
             self.has_been_played = is_played
         else:
             raise TypeError
+

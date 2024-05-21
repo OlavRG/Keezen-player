@@ -7,7 +7,7 @@ from game_info import GameInfo
 import random
 
 
-def parse_board_state(board_state):
+def create_game_objects_from_board_state(board_state):
     player = Player(board_state["my_color"])
     hand = []
     for card in board_state["hand"]:
@@ -40,7 +40,17 @@ def parse_board_state(board_state):
     return player, my_pawns, other_pawns, hand, game_info
 
 
-def create_players_and_cards_and_pawns(n_players):
+def set_pawns_to_current_player_PoV(players, current_player, game_info):
+    other_pawns = []
+    list(map(other_pawns.extend, [player.pawns for player in players if player != current_player]))
+    for pawn in current_player.pawns + other_pawns:
+        pawn.set_position_relative_to_current_player(current_player, game_info)
+        # Print pawn positions from this players POV and the intended card play
+        print(pawn)
+    return other_pawns
+
+
+def create_starting_game_objects(n_players):
     # currently 8 colors and hence 8 players are supported
     colors = ['red', 'white', 'blue', 'orange', 'black', 'green', 'magenta', 'cyan']
     if n_players > len(colors):

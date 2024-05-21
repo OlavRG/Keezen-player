@@ -6,6 +6,7 @@ from pawn import Pawn
 from game_info import GameInfo
 from player import Player
 
+
 def check_for_tackled_pawn_and_move_them_home(my_pawn, my_pawns, other_pawns):
     my_other_pawns = [value for value in my_pawns if value != my_pawn]
     for target_pawn in my_other_pawns + other_pawns:
@@ -73,7 +74,7 @@ def play_any_card_on_a_pawn_and_resolve_outcome(card: Card, my_pawn: Pawn, my_ot
     for pawn in [my_pawn] + my_other_pawns + other_pawns:
         pawn.reset_start_of_turn_bools_for_next_turn()
 
-    # mark that card has been played for testing
+    # Mark that card has been played. This ensures that tests for the next card play do not re-trigger cards
     card.set_play_status(True)
 
     # get board value
@@ -282,5 +283,19 @@ def move_card_from_hand_to_discard_and_mark_in_player_card_history(player: Playe
     player.cards_played_this_round += card.rank
     card_index_in_hand = player.hand.index(card)
     discard_pile.append(player.hand.pop(card_index_in_hand))
-    return
+    return player, discard_pile
 
+
+def resolve_a_legal_card_play(player, other_pawns, discard_pile, game_info, client_card_play):
+    my_other_pawns = [pawn for pawn in player.pawns if pawn != client_card_play["primary_pawn"]]
+    play_any_card_on_a_pawn_and_resolve_outcome(card=client_card_play["card"],
+                                                my_pawn=client_card_play["primary_pawn"],
+                                                my_other_pawns=my_other_pawns,
+                                                other_pawns=other_pawns,
+                                                game_info=game_info,
+                                                card_plays_on_pawns_and_outcomes=[],
+                                                target_pawn=client_card_play["secondary_pawn"],
+                                                move_1=client_card_play["primary_move"])
+    move_card_from_hand_to_discard_and_mark_in_player_card_history(player,
+                                                                   client_card_play["card"], discard_pile)
+    return

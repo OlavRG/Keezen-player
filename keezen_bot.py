@@ -5,7 +5,7 @@ Created on Sun Jul 24 11:22:10 2022
 @author: olavg
 """
 
-from board_state_logic import parse_board_state
+from board_state_logic import create_game_objects_from_board_state
 from card_play_logic import test_all_possible_plays
 from card_play_logic import test_all_possible_follow_up_plays
 from card_play_logic import pick_play_with_highest_eventual_board_value
@@ -19,7 +19,7 @@ def keezen_bot(board_state):
 
     # Parse board state, return pawn objects, hand object, player object
     # board_state = board_state_niche_tester.board_state_blocked
-    [player, my_pawns, other_pawns, hand, game_info] = parse_board_state(board_state)
+    [player, my_pawns, other_pawns, hand, game_info] = create_game_objects_from_board_state(board_state)
 
     all_non_dead_plays = []
     all_dead_plays = []

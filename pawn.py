@@ -47,8 +47,9 @@ class Pawn:
             pass
 
     def check_for_negative_position(self, board_size):
-        if self.position < 0:
+        if self.position < 0 or self.position_from_own_start < 0:
             self.position = (self.position + board_size) % board_size
+            self.position_from_own_start = (self.position_from_own_start + board_size) % board_size
             self.is_protected = False
         else:
             pass
@@ -126,12 +127,10 @@ class Pawn:
             self.move(card.move_value, game_info.board_size)
 
     def set_position_relative_to_current_player(self, current_player, game_info):
-        if self.color != current_player.color:
-            pawn_turn_relative_to_player = (
-                        (game_info.player_colors.index(self.color) -
-                         game_info.player_colors.index(current_player.color)) %
-                        len(game_info.player_colors))
-            self.position = self.position_from_own_start + 16 * pawn_turn_relative_to_player % game_info.board_size
-            self.position_at_start_of_turn = self.position
-        elif self.color == current_player.color:
-            self.position = self.position_from_own_start
+        pawn_turn_relative_to_player = (
+                    (game_info.player_colors.index(self.color) -
+                     game_info.player_colors.index(current_player.color)) %
+                    len(game_info.player_colors))
+        self.position = (self.position_from_own_start + 16 * pawn_turn_relative_to_player) % game_info.board_size
+        self.position_at_start_of_turn = self.position
+
