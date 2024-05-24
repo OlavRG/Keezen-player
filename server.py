@@ -72,30 +72,31 @@ if __name__ == "__main__":
             other_pawns = set_pawns_to_current_player_PoV(players, players[client], game_info)
 
             print(players[client].color + ' hand: ' + ''.join(card.rank for card in players[client].hand))
-            print(client_card_play_dict)
+            print('client card play: ', client_card_play_dict)
 
             # Make a list of all possible plays and check if the clients move is in it
-            possible_card_plays = test_all_possible_plays(players[client], players[client].pawns, other_pawns, players[client].hand, game_info)
-            legal_possible_card_plays = [card_play for card_play in possible_card_plays if card_play[-1]["card_play_is_legal"]]
-            legal_possible_card_play_dicts = list(map(card_play_to_dict, legal_possible_card_plays))
-            if not legal_possible_card_play_dicts:
+            all_card_plays = test_all_possible_plays(players[client], players[client].pawns, other_pawns, players[client].hand, game_info)
+            legal_card_plays = [card_play for card_play in all_card_plays if card_play[-1]["card_play_is_legal"]]
+            legal_card_play_dicts = list(map(card_play_to_dict, legal_card_plays))
+            if not legal_card_play_dicts:
                 # Discard hand
-                for card in players[client].hand:
-                    move_card_from_hand_to_discard_and_mark_in_player_card_history(players[client], card, discard_pile)
+                discard_pile.append(players[client].hand)
+                players[client].cards_played_this_round += ''.join(card.rank for card in players[client].hand)
+                players[client].hand[:] = []
                 print('No legal card play available, hand is discarded')
-            elif client_card_play_dict not in legal_possible_card_play_dicts:
+            elif client_card_play_dict not in legal_card_play_dicts:
                 # Play the lowest value card_play
-                lowest_board_value = min([card_play[0]["board_value"] for card_play in legal_possible_card_plays])
-                client_card_play_index = legal_possible_card_plays.index(lowest_board_value)
-                client_card_play = legal_possible_card_plays[client_card_play_index][0]
+                legal_card_play_board_values = [card_play[0]["board_value"] for card_play in legal_card_plays]
+                client_card_play_index = legal_card_play_board_values.index(min(legal_card_play_board_values))
+                client_card_play = legal_card_plays[client_card_play_index][0]
                 resolve_a_legal_card_play(players[client], other_pawns, discard_pile, game_info, client_card_play)
                 print('Provided card play is illegal. Worst card play was played instead.')
             else:
                 # Print that the play is deemed legal
                 print('card play is legal')
                 # resolve client_card_play
-                client_card_play_index = legal_possible_card_play_dicts.index(client_card_play_dict)
-                client_card_play = legal_possible_card_plays[client_card_play_index][0]
+                client_card_play_index = legal_card_play_dicts.index(client_card_play_dict)
+                client_card_play = legal_card_plays[client_card_play_index][0]
                 resolve_a_legal_card_play(players[client], other_pawns, discard_pile, game_info, client_card_play)
             board_states = create_board_states_per_client(players, deck, game_info)
             all_pawns_of_current_player_are_in_finish = all([pawn.finish for pawn in players[client].pawns])
@@ -106,8 +107,6 @@ if __name__ == "__main__":
             else:
                 pass
 
-        # Next: Hand does not discard all cards properly when there is no legal play. Fix that
-        # Next: fix that hand lowest value play is done when an illegal move is proposed
         # Next: add multiple rounds
 
     """
