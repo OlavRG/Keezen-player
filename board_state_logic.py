@@ -50,6 +50,12 @@ def set_pawns_to_current_player_PoV(players, current_player, game_info):
     return other_pawns
 
 
+def deal_cards_from_deck_to_players(players, deck, cards_per_player):
+    for player in range(len(players)):
+        for card in range(cards_per_player):
+            players[player].hand.append(deck.pop())
+
+
 def create_starting_game_objects(n_players):
     # currently 8 colors and hence 8 players are supported
     colors = ['red', 'white', 'blue', 'orange', 'black', 'green', 'magenta', 'cyan']
@@ -62,11 +68,6 @@ def create_starting_game_objects(n_players):
     players = []
     for player in range(0, n_players):
         players.append(Player(colors[player]))
-        players[player].hand.append(deck.pop())
-        players[player].hand.append(deck.pop())
-        players[player].hand.append(deck.pop())
-        players[player].hand.append(deck.pop())
-        players[player].hand.append(deck.pop())
         players[player].pawns.append(Pawn(colors[player], 0, 0, home=True, finish=False, protected=True))
         players[player].pawns.append(Pawn(colors[player], 0, 0, home=True, finish=False, protected=True))
         players[player].pawns.append(Pawn(colors[player], 0, 0, home=True, finish=False, protected=True))
