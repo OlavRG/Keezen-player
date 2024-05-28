@@ -48,7 +48,9 @@ def spawn_at_occupied_base(my_pawn, my_other_pawns):
 def move_past_protected_pawn(my_pawn, my_other_pawns, other_pawns, move_value, game_info):
     legal = True
     for other_pawn in my_other_pawns + other_pawns:
-        if other_pawn.is_protected and not other_pawn.home:
+        if (other_pawn.is_protected and not other_pawn.home and
+                (other_pawn.color == my_pawn.color or
+                (not other_pawn.color == my_pawn.color and not other_pawn.finish))):
             # pass or hit a protected pawn while moving forward
             if my_pawn.position_at_start_of_turn < other_pawn.position <= my_pawn.position and move_value > 0:
                 legal = False

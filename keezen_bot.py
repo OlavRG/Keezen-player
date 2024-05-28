@@ -21,36 +21,24 @@ def keezen_bot(board_state):
     # board_state = board_state_niche_tester.board_state_blocked
     [player, my_pawns, other_pawns, hand, game_info] = create_game_objects_from_board_state(board_state)
 
-    all_non_dead_plays = []
-    all_dead_plays = []
+    dead_end_plays = []
     # turn 1
-    turn_1_plays = test_all_possible_plays(player, my_pawns, other_pawns, hand, game_info)
-    turn_1_legal_plays = [card_play for card_play in turn_1_plays if card_play[-1]["card_play_is_legal"]]
-    if not turn_1_legal_plays:
-        # Discard hand
-        all_non_dead_plays = []
-        all_dead_plays = []
-    else:
-        # all other turns
-        for turn in range(2, len(hand)+1):
-            if turn == 2:
-                all_non_dead_plays, all_dead_plays = (
-                    test_all_possible_follow_up_plays(player, my_pawns, other_pawns, hand, game_info,
-                                                      turn_1_legal_plays, all_dead_plays))
-            else:
-                all_non_dead_plays, all_dead_plays = (
-                    test_all_possible_follow_up_plays(player, my_pawns, other_pawns, hand, game_info,
-                                                      all_non_dead_plays, all_dead_plays))
+    card_plays = test_all_possible_plays(player, my_pawns, other_pawns, hand, game_info)
+    legal_card_plays = [card_play for card_play in card_plays if card_play[-1]["card_play_is_legal"]]
+    for turn in range(len(hand)):
+        legal_card_plays, dead_end_plays = (
+            test_all_possible_follow_up_plays(player, my_pawns, other_pawns, hand, game_info,
+                                              legal_card_plays, dead_end_plays))
 
     # First turn of next round. Hand contains all cards to test all
     next_round_hand = []
     all_unique_cards = 'A23456789XJQK'
     for card in all_unique_cards:
         next_round_hand.append(Card(card))
-    all_non_dead_plays = test_all_possible_follow_up_plays(player, my_pawns, other_pawns, next_round_hand, game_info,
-                                                           all_non_dead_plays, [])[0]
+    legal_card_plays = test_all_possible_follow_up_plays(player, my_pawns, other_pawns, next_round_hand, game_info,
+                                                         legal_card_plays, [])[0]
 
-    Final_play = pick_play_with_highest_eventual_board_value(all_non_dead_plays + all_dead_plays)
+    Final_play = pick_play_with_highest_eventual_board_value(legal_card_plays + dead_end_plays)
 
     def print_plays_properly(plays):
         for play in plays:

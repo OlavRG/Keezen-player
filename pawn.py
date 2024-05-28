@@ -127,10 +127,13 @@ class Pawn:
             self.move(card.move_value, game_info.board_size)
 
     def set_position_relative_to_current_player(self, current_player, game_info):
-        pawn_turn_relative_to_player = (
-                    (game_info.player_colors.index(self.color) -
-                     game_info.player_colors.index(current_player.color)) %
-                    len(game_info.player_colors))
-        self.position = (self.position_from_own_start + 16 * pawn_turn_relative_to_player) % game_info.board_size
-        self.position_at_start_of_turn = self.position
-
+        if self.color != current_player.color:
+            pawn_turn_relative_to_player = (
+                        (game_info.player_colors.index(self.color) -
+                         game_info.player_colors.index(current_player.color)) %
+                        len(game_info.player_colors))
+            self.position = (self.position_from_own_start + 16 * pawn_turn_relative_to_player) % game_info.board_size
+            self.position_at_start_of_turn = self.position
+        else:
+            self.position = self.position_from_own_start
+            self.position_at_start_of_turn = self.position
