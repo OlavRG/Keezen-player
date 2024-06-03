@@ -1,4 +1,9 @@
-import copy
+# FUNCTION:
+#   This script contains all functions that let the server set up the game objects (players, pawns, deck, discard_pile,
+#   and player.hand) for a game to start. It also contains all functions for the client to set up the game objects from
+#   their perspective.
+#   Secondly it makes the board_state dictionary that is used to communicate all relevant info from the server to the
+#   clients, and to convert game objects to this board_state and vice versa.
 
 from player import Player
 from card import Card

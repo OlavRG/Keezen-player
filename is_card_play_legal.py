@@ -34,7 +34,8 @@ def spawn_at_occupied_base(my_pawn, my_other_pawns):
                 legal = False
                 return legal
             else:
-                return legal
+                pass
+        return legal
     else:
         return legal
 

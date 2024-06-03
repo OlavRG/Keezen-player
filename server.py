@@ -9,45 +9,7 @@ from board_state_logic import deal_cards_from_deck_to_players
 from card_play_logic import test_all_possible_plays
 from card_play_logic import card_play_to_dict
 from card_play_logic import resolve_a_legal_card_play
-
-
-def read_pos(position):
-    position = position.split(",")
-    return int(position[0]), int(position[1])
-
-
-def make_pos(tup):
-    return str(tup[0]) + "," + str(tup[1])
-
-
-def threaded_client(conn, player):
-    pos = [(0, 0), (100, 100)]
-    pos_serialized = json.dumps(pos[player]).encode("utf-8")
-    conn.send(pos_serialized)
-    reply = ""
-    while True:
-        try:
-            data = json.loads(conn.recv(2048).decode("utf-8"))
-            pos[player] = data
-
-            if not data:
-                print("Disconnected")
-                break
-            else:
-                if player == 1:
-                    reply = pos[0]
-                else:
-                    reply = pos[1]
-
-                print("Received: ", data)
-                print("Sending : ", reply)
-
-            conn.sendall(json.dumps(reply).encode("utf-8"))
-        except:
-            break
-
-    print("Lost connection")
-    conn.close()
+from client_view import print_player_view
 
 
 if __name__ == "__main__":
@@ -66,7 +28,7 @@ if __name__ == "__main__":
     while not all_pawns_of_current_player_are_in_finish:
         # reset the deck when all cards are in the discard pile
         if len(deck) == 0 and len(discard_pile) != 0:
-            deck.append(discard_pile[:])
+            deck.extend(discard_pile[:])
             random.shuffle(deck)
             discard_pile[:] = []
         else:
@@ -89,7 +51,8 @@ if __name__ == "__main__":
                     # Define other_pawns and set pawn.position to the position from the current players POV
                     other_pawns = set_pawns_to_current_player_PoV(players, players[client], game_info)
 
-                    print(players[client].color + ' hand: ' + ''.join(card.rank for card in players[client].hand))
+                    print_player_view(players[client], other_pawns)
+
                     print('client card play: ', client_card_play_dict)
 
                     # Make a list of all possible plays and check if the clients move is in it
@@ -98,18 +61,21 @@ if __name__ == "__main__":
                     legal_card_play_dicts = list(map(card_play_to_dict, legal_card_plays))
                     if not legal_card_play_dicts:
                         # Discard hand
-                        discard_pile.append(players[client].hand)
-                        players[client].cards_played_this_round += ''.join(card.rank for card in players[client].hand)
-                        players[client].hand[:] = []
-                        print('No legal card play available, hand is discarded')
+                        if players[client].hand:
+                            discard_pile.extend(players[client].hand[:])
+                            players[client].cards_played_this_round += ''.join(card.rank for card in players[client].hand)
+                            players[client].hand[:] = []
+                            print('No legal card play available, hand is discarded')
+                        else:
+                            print('No legal card play available')
                     elif client_card_play_dict not in legal_card_play_dicts:
                         # Play the lowest value card_play
                         legal_card_play_board_values = [card_play[0]["board_value"] for card_play in legal_card_plays]
                         worst_card_play_index = legal_card_play_board_values.index(min(legal_card_play_board_values))
                         worst_card_play = legal_card_plays[worst_card_play_index][0]
-                        resolve_a_legal_card_play(players[client], other_pawns, discard_pile, game_info, worst_card_play)
                         print('Provided card play is illegal. Worst card play was played instead.')
                         print('Substituted card play: ', card_play_to_dict([worst_card_play]))
+                        resolve_a_legal_card_play(players[client], other_pawns, discard_pile, game_info, worst_card_play)
                     else:
                         # Print that the play is deemed legal
                         print('card play is legal')
@@ -131,15 +97,24 @@ if __name__ == "__main__":
             break
     print("game successfully finished")
 
+    # Make executable to get more testers
     # Next: run games and debug
-        # Pawns in finish seem to be blocking new pawns from spawning
+    # Whatever the heck is happening below. Probably best to just play many games with server in debug mode and
+    # check variables:
+    """
+    (white, 35, home: False, finish: True, protected: True)
+    (white, 29, home: False, finish: False, protected: False)
+    (white, 0, home: False, finish: False, protected: True)
+    (white, 0, home: True, finish: False, protected: False)
+    (red, 16, home: True, finish: False, protected: True)
+    (red, 16, home: True, finish: False, protected: True)
+    (red, 16, home: True, finish: False, protected: True)
+    (red, 16, home: True, finish: False, protected: True)
+    white hand: Q33J
+    client card play: {'card': 'Q', 'primary_pawn_color': 'white', 'primary_pawn_position': 0, 'primary_pawn_home': False,
+           'secondary_pawn_color': None, 'secondary_pawn_position': None, 'primary_move': 12}
+    No legal card play available, hand is discarded
+    """
+    # When client uses A to place a pawn on the board it is illegal. Likely due to move value 1 instead of 0. Should be fixed.
+    # Pawns in finish seem to be blocking new pawns from spawning --> solved already? test this
 
-    """
-        currentPlayer = 0
-        while True:
-            conn, addr = s.accept()
-            print("Connected to:", addr)
-    
-            _thread.start_new_thread(threaded_client, (conn, currentPlayer))
-            currentPlayer += 1
-    """

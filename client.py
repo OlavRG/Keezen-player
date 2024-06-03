@@ -1,7 +1,7 @@
 import pygame
 from network import ClientNetwork
 from keezen_bot import keezen_bot
-
+import client_view
 
 def open_display():
     width = 500
@@ -63,15 +63,21 @@ def redrawWindow(win,player, player2):
 def main(server_IP):
     n = ClientNetwork(server_IP)
     all_pawns_of_current_player_are_in_finish = False
+    player_is_human = client_view.is_player_human()
     n.connect()
     while not all_pawns_of_current_player_are_in_finish:
         board_state = n.receive()
-        card_play = keezen_bot(board_state)
+        if not player_is_human:
+            card_play = keezen_bot(board_state)
+        else:
+            card_play = client_view.pick_card_play(board_state)
         n.send(card_play)
         all_pawns_of_current_player_are_in_finish = n.receive()
 
     bla = 1
-"""
+
+
+"""            
     run = True
     n = Network()
     startPos = n.getPos()

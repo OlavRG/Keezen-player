@@ -232,9 +232,11 @@ def card_play_to_dict(card_play):
     else:
         secondary_pawn_color = None
         secondary_pawn_position = None
+    # primary_pawn_home is needed to distinguish between pawns at position 0 on the board and at home
     card_play_dict = {"card": card_play["card"].rank,
                       "primary_pawn_color": card_play["primary_pawn"].color,
                       "primary_pawn_position": card_play["primary_pawn"].position_from_own_start,
+                      "primary_pawn_home": card_play["primary_pawn"].home,
                       "secondary_pawn_color": secondary_pawn_color,
                       "secondary_pawn_position": secondary_pawn_position,
                       "primary_move": card_play["primary_move"]}
