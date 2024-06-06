@@ -243,44 +243,6 @@ def card_play_to_dict(card_play):
     return card_play_dict
 
 
-def check_if_client_card_play_is_legal(player, my_pawns, other_pawns, hand, game_info, card_play_dict):
-    # If the client returned None, it means they can play no card. Test this first
-    if not card_play_dict:
-        pass
-    else:
-        pass
-
-    legal = False
-    legal_card = False
-    legal_color = False
-    legal_pawn = False
-
-    # First check if the player actually is the right color and has the card in hand
-    if card_play_dict["card"] in [card.rank for card in hand]:
-        legal_card = True
-    if card_play_dict["primary_pawn_color"] == player.color:
-        legal_color = True
-
-    # check if the player has a pawn on the position of play
-    legal_pawn = any([True for pawn in my_pawns if pawn.position_from_own_start == card_play_dict["primary_pawn_position"]])
-
-    card = next((card for card in hand if card.rank == card_play_dict["card"]), None)
-    my_pawn = next((pawn for pawn in my_pawns if pawn.position_from_own_start == card_play_dict["primary_pawn_position"]), None)
-    my_other_pawns = [value for value in my_pawns if value != my_pawn]
-    target_pawn = next((pawn for pawn in my_pawns + other_pawns if
-                        pawn.position_from_own_start == card_play_dict["secondary_pawn_position"] and
-                        pawn.color == card_play_dict["secondary_pawn_color"]
-                        ), None)
-    if card.is_splittable and target_pawn:
-        move_1 = card_play_dict["primary_move"]
-    else:
-        move_1 = None
-
-    card_play = play_any_card_on_a_pawn_and_resolve_outcome(card, my_pawn, my_other_pawns, other_pawns, game_info,
-                                                            [], target_pawn, move_1)[0]
-    return card_play[0][0]["card_play_is_legal"]
-
-
 def move_card_from_hand_to_discard_and_mark_in_player_card_history(player: Player, card: Card, discard_pile: list):
     player.cards_played_this_round += card.rank
     card_index_in_hand = player.hand.index(card)

@@ -98,23 +98,11 @@ if __name__ == "__main__":
     print("game successfully finished")
 
     # Make executable to get more testers
+    # Next: legal card plays are missing due to Card.has_been_played not being properly set back to False. Fix it
+    #   Merge resolve_a_legal_card_play and resolve_a_legal_card_play. Card.has_been_played is replaced by actually
+    #   moving the card to discard, and resetting hand and discard afterwards in the test functions.
+    #   Card.has_been_played can now be entirely removed.
+    #   Input should be a card_play + game objects (players, deck, discard, game_info)
+    # Next: define all card_play_logic input and output in terms of game objects and card_play
     # Next: run games and debug
-    # Whatever the heck is happening below. Probably best to just play many games with server in debug mode and
-    # check variables:
-    """
-    (white, 35, home: False, finish: True, protected: True)
-    (white, 29, home: False, finish: False, protected: False)
-    (white, 0, home: False, finish: False, protected: True)
-    (white, 0, home: True, finish: False, protected: False)
-    (red, 16, home: True, finish: False, protected: True)
-    (red, 16, home: True, finish: False, protected: True)
-    (red, 16, home: True, finish: False, protected: True)
-    (red, 16, home: True, finish: False, protected: True)
-    white hand: Q33J
-    client card play: {'card': 'Q', 'primary_pawn_color': 'white', 'primary_pawn_position': 0, 'primary_pawn_home': False,
-           'secondary_pawn_color': None, 'secondary_pawn_position': None, 'primary_move': 12}
-    No legal card play available, hand is discarded
-    """
-    # When client uses A to place a pawn on the board it is illegal. Likely due to move value 1 instead of 0. Should be fixed.
-    # Pawns in finish seem to be blocking new pawns from spawning --> solved already? test this
 

@@ -16,7 +16,7 @@ class Network:
     def receive(self):
         try:
             return json.loads(self.socket_obj.recv(2048).decode("utf-8"))
-        except socket.error as e:
+        except json.decoder.JSONDecodeError as e:
             print(e)
 
     def close(self):

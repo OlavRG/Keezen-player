@@ -50,8 +50,6 @@ def set_pawns_to_current_player_PoV(players, current_player, game_info):
     list(map(other_pawns.extend, [player.pawns for player in players if player != current_player]))
     for pawn in current_player.pawns + other_pawns:
         pawn.set_position_relative_to_current_player(current_player, game_info)
-        # Print pawn positions from this players POV and the intended card play
-        print(pawn)
     return other_pawns
 
 
