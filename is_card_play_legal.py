@@ -106,7 +106,9 @@ def play_jack_on_protected_pawn(my_pawn, other_pawns):
     legal = True
     for other_pawn in other_pawns:
         if my_pawn.position == other_pawn.position_at_start_of_turn and \
-                other_pawn.position == my_pawn.position_at_start_of_turn:
+                other_pawn.position == my_pawn.position_at_start_of_turn and \
+                not my_pawn.home_at_start_of_turn and \
+                not other_pawn.home_at_start_of_turn:
             if other_pawn.position_from_own_start_at_start_of_turn == 0 or my_pawn.position_at_start_of_turn == 0 or \
                     other_pawn.finish_at_start_of_turn or my_pawn.finish_at_start_of_turn:
                 legal = False

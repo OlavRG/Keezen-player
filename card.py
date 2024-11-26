@@ -2,7 +2,6 @@ class Card():
     def __init__(self, rank, suit=None):
         self.rank = rank
         self.suit = suit
-        self.has_been_played = False
         self.is_splittable = False
         if rank == 'A':
             self.move_value = 1
@@ -36,10 +35,4 @@ class Card():
 
         if rank == 'K':
             self.move_value = 0
-
-    def set_play_status(self, is_played):
-        if isinstance(is_played, bool):
-            self.has_been_played = is_played
-        else:
-            raise TypeError
 

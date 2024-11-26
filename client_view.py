@@ -75,9 +75,7 @@ def print_player_view(player, other_pawns):
 
 def pick_card_play(board_state):
     # Parse board state, return pawn objects, hand object, player object
-    [player, my_pawns, other_pawns, hand, game_info] = create_game_objects_from_board_state(board_state)
-    player.hand = hand
-    player.pawns = my_pawns
+    [player, other_pawns, discard_pile, game_info] = create_game_objects_from_board_state(board_state)
 
     print_player_view(player, other_pawns)
 
@@ -147,23 +145,21 @@ def pick_card_play(board_state):
                     print(f"Pick a pawn between 1 and {len(player.pawns + other_pawns)}")
     else:
         target_pawn = None
-    if card.is_splittable:
+    if card.is_splittable and target_pawn:
         while type(move_value) is not int:
             move_value = input("How far will your first pawn move?")
             try:
                 move_value = int(move_value)
             except ValueError:
                 print(f"{move_value} is not an integer")
-    elif my_pawn.home:
-        move_value = 0
     else:
         move_value = card.move_value
     card_play = create_card_play(card, my_pawn, target_pawn, move_value, card_play_is_legal=True, board_value=0)
     card_play_dict = card_play_to_dict([card_play])
     return card_play_dict
 
-
-    # Next: Make this functional for a command line client
+    # Next: player input for pawns and cards are not always properly processed. Other cards in hand are played on other
+    # pawns instead.
     # NExt: change this into a GUI, most likely as an object
 
 

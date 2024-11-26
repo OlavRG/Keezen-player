@@ -14,16 +14,18 @@ import random
 
 def create_game_objects_from_board_state(board_state):
     player = Player(board_state["my_color"])
-    hand = []
     for card in board_state["hand"]:
-        hand.append(Card(card))
+        player.hand.append(Card(card))
     # get unique colors with same order as board_state. This determines player order!
     player_colors = []
     for pawn in board_state["pawns"]:
         if pawn["color"] not in player_colors:
             player_colors.append(pawn["color"])
+    player.card_history = ''.join(player_history["card_history"] for player_history in board_state["card_history"] if
+                                  player_history["color"] == player.color)
     game_info = GameInfo(player_colors)
-    my_pawns = []
+    discard_pile_card_string = ''.join(player_history["card_history"] for player_history in board_state["card_history"])
+    discard_pile = [Card(card) for card in discard_pile_card_string]
     other_pawns = []
     for pawn in board_state["pawns"]:
         if pawn["position"] == 0 or pawn["finish"]:
@@ -33,8 +35,8 @@ def create_game_objects_from_board_state(board_state):
         if pawn["color"] == player.color:
             if pawn["finish"] and pawn["position"] in range(0, 4):
                 pawn["position"] = pawn["position"] + game_info.board_size
-            my_pawns.append(Pawn(pawn["color"], pawn["position"], pawn["position"],
-                                 pawn["home"], pawn["finish"], is_protected))
+            player.pawns.append(Pawn(pawn["color"], pawn["position"], pawn["position"],
+                                pawn["home"], pawn["finish"], is_protected))
         elif pawn["color"] != player.color:
             pawn_turn_relative_to_player = ((player_colors.index(pawn["color"]) - player_colors.index(player.color)) %
                                             len(player_colors))
@@ -42,7 +44,7 @@ def create_game_objects_from_board_state(board_state):
             position_relative_to_player_start = position_relative_to_player_start % game_info.board_size
             other_pawns.append(Pawn(pawn["color"], position_relative_to_player_start, pawn["position"],
                                     pawn["home"], pawn["finish"], is_protected))
-    return player, my_pawns, other_pawns, hand, game_info
+    return player, other_pawns, discard_pile, game_info
 
 
 def set_pawns_to_current_player_PoV(players, current_player, game_info):
@@ -84,21 +86,20 @@ def create_board_states_per_client(players, deck, game_info):
     hands = [[] for iterator in range(0, len(players))]
     other_hands_size = [[] for iterator in range(0, len(players))]
     pawns = []
-    card_history = ''
+    card_history = []
     for n_player in range(0, len(players)):
         hands[n_player] = ''.join(card.rank for card in players[n_player].hand)
         board_states[n_player]["hand"] = hands[n_player]
         other_hands_size[n_player] = [len(any_player.hand) for any_player in players if any_player != players[n_player]]
         board_states[n_player]["other_hands"] = other_hands_size[n_player]
         board_states[n_player]["my_color"] = players[n_player].color
-        card_history += players[n_player].cards_played_this_round
+        card_history.append({"color": players[n_player].color, "card_history": players[n_player].card_history})
         board_states[n_player]["card_history"] = card_history
         for pawn in players[n_player].pawns:
             pawns.append({"color": pawn.color, "position": pawn.position_from_own_start % game_info.board_size,
                           "home": pawn.home, "finish": pawn.finish})
         board_states[n_player]["pawns"] = pawns
 
-    # next: add card_history per player color
     # next: cards left in deck should be added to board state format
     return board_states
 
@@ -123,7 +124,11 @@ board_state_start = {"pawns": [
     "hand": 'A47JQ',
     "other_hands": [5, 5, 5],
     "my_color": "Orange",
-    "card_history": ""
+    "card_history": [
+        {"color": "Blue", "card_history": '483JX'},
+        {"color": "Orange", "card_history": '483JX'},
+        {"color": "Red", "card_history": '483JX'},
+        {"color": "White", "card_history": '483JX'}]
     }
 
 

@@ -8,7 +8,8 @@ from board_state_logic import set_pawns_to_current_player_PoV
 from board_state_logic import deal_cards_from_deck_to_players
 from card_play_logic import test_all_possible_plays
 from card_play_logic import card_play_to_dict
-from card_play_logic import resolve_a_legal_card_play
+from card_play_logic import do_card_play_and_resolve_outcome
+from card_play_logic import move_card_from_hand_to_discard_and_mark_in_player_card_history
 from client_view import print_player_view
 
 
@@ -56,14 +57,15 @@ if __name__ == "__main__":
                     print('client card play: ', client_card_play_dict)
 
                     # Make a list of all possible plays and check if the clients move is in it
-                    all_card_plays = test_all_possible_plays(players[client], players[client].pawns, other_pawns, players[client].hand, game_info)
+                    all_card_plays = test_all_possible_plays(players[client], other_pawns, discard_pile, game_info)
                     legal_card_plays = [card_play for card_play in all_card_plays if card_play[-1]["card_play_is_legal"]]
                     legal_card_play_dicts = list(map(card_play_to_dict, legal_card_plays))
                     if not legal_card_play_dicts:
+                        print('No legal card play available')
                         # Discard hand
                         if players[client].hand:
                             discard_pile.extend(players[client].hand[:])
-                            players[client].cards_played_this_round += ''.join(card.rank for card in players[client].hand)
+                            players[client].card_history += ''.join(card.rank for card in players[client].hand)
                             players[client].hand[:] = []
                             print('No legal card play available, hand is discarded')
                         else:
@@ -75,14 +77,24 @@ if __name__ == "__main__":
                         worst_card_play = legal_card_plays[worst_card_play_index][0]
                         print('Provided card play is illegal. Worst card play was played instead.')
                         print('Substituted card play: ', card_play_to_dict([worst_card_play]))
-                        resolve_a_legal_card_play(players[client], other_pawns, discard_pile, game_info, worst_card_play)
+                        do_card_play_and_resolve_outcome(worst_card_play, players[client], other_pawns, game_info,
+                                                         card_plays_on_pawns_and_outcomes=[])
+                        # Discard card from hand
+                        move_card_from_hand_to_discard_and_mark_in_player_card_history(players[client],
+                                                                                       worst_card_play["card"],
+                                                                                       discard_pile)
                     else:
                         # Print that the play is deemed legal
                         print('card play is legal')
                         # resolve client_card_play
                         client_card_play_index = legal_card_play_dicts.index(client_card_play_dict)
                         client_card_play = legal_card_plays[client_card_play_index][0]
-                        resolve_a_legal_card_play(players[client], other_pawns, discard_pile, game_info, client_card_play)
+                        do_card_play_and_resolve_outcome(client_card_play, players[client], other_pawns, game_info,
+                                                         card_plays_on_pawns_and_outcomes=[])
+                        # Discard card from hand
+                        move_card_from_hand_to_discard_and_mark_in_player_card_history(players[client],
+                                                                                       client_card_play["card"],
+                                                                                       discard_pile)
                     board_states = create_board_states_per_client(players, deck, game_info)
                     all_pawns_of_current_player_are_in_finish = all([pawn.finish for pawn in players[client].pawns])
                     sockets_to_clients[client].send(all_pawns_of_current_player_are_in_finish)
@@ -97,12 +109,7 @@ if __name__ == "__main__":
             break
     print("game successfully finished")
 
-    # Make executable to get more testers
-    # Next: legal card plays are missing due to Card.has_been_played not being properly set back to False. Fix it
-    #   Merge resolve_a_legal_card_play and resolve_a_legal_card_play. Card.has_been_played is replaced by actually
-    #   moving the card to discard, and resetting hand and discard afterwards in the test functions.
-    #   Card.has_been_played can now be entirely removed.
-    #   Input should be a card_play + game objects (players, deck, discard, game_info)
     # Next: define all card_play_logic input and output in terms of game objects and card_play
+    # Next: play
     # Next: run games and debug
 

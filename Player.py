@@ -4,4 +4,5 @@ class Player:
         self.color = color
         self.pawns = []
         self.hand = []
-        self.cards_played_this_round = ''
+        # card_history should be reset everytime the deck is dealt
+        self.card_history = ''

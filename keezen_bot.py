@@ -19,24 +19,27 @@ def keezen_bot(board_state):
 
     # Parse board state, return pawn objects, hand object, player object
     # board_state = board_state_niche_tester.board_state_blocked
-    [player, my_pawns, other_pawns, hand, game_info] = create_game_objects_from_board_state(board_state)
+    [player, other_pawns, discard_pile, game_info] = create_game_objects_from_board_state(board_state)
 
     dead_end_plays = []
     # turn 1
-    card_plays = test_all_possible_plays(player, my_pawns, other_pawns, hand, game_info)
+    card_plays = test_all_possible_plays(player, other_pawns, discard_pile, game_info)
     legal_card_plays = [card_play for card_play in card_plays if card_play[-1]["card_play_is_legal"]]
-    for turn in range(len(hand)):
+    for turn in range(len(player.hand)):
         legal_card_plays, dead_end_plays = (
-            test_all_possible_follow_up_plays(player, my_pawns, other_pawns, hand, game_info,
-                                              legal_card_plays, dead_end_plays))
+            test_all_possible_follow_up_plays(legal_card_plays, dead_end_plays, player, other_pawns, game_info,
+                                              discard_pile))
 
     # First turn of next round. Hand contains all cards to test all
     next_round_hand = []
     all_unique_cards = 'A23456789XJQK'
     for card in all_unique_cards:
         next_round_hand.append(Card(card))
-    legal_card_plays = test_all_possible_follow_up_plays(player, my_pawns, other_pawns, next_round_hand, game_info,
-                                                         legal_card_plays, [])[0]
+    backup_hand = player.hand[:]
+    player.hand = next_round_hand
+    legal_card_plays = test_all_possible_follow_up_plays(legal_card_plays, [], player, other_pawns, game_info,
+                                                         discard_pile)[0]
+    player.hand = backup_hand[:]
 
     Final_play = pick_play_with_highest_eventual_board_value(legal_card_plays + dead_end_plays)
 
