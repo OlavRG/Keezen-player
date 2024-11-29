@@ -19,9 +19,9 @@ def player_choice(q1, m1, m2, m3):
             print(m2)
         else:
             if stupid_player_loop == 0:
-                print("Input should be \"Y\" or \"N\". Is that so hard?")
+                print("Input should be \"Y\" or \"N\". You can do it!")
             elif stupid_player_loop == 1:
-                print("It's just one letter. You can do it!")
+                print("It's just one letter. Is that so hard?")
             elif stupid_player_loop == 2:
                 print("Come on...")
             elif stupid_player_loop == 3:
@@ -158,8 +158,6 @@ def pick_card_play(board_state):
     card_play_dict = card_play_to_dict([card_play])
     return card_play_dict
 
-    # Next: player input for pawns and cards are not always properly processed. Other cards in hand are played on other
-    # pawns instead.
     # NExt: change this into a GUI, most likely as an object
 
 

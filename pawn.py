@@ -63,6 +63,9 @@ class Pawn:
     def set_position_from_own_start_after_jack(self):
         relative_move = self.position_at_start_of_turn - self.position
         self.position_from_own_start = self.position_from_own_start - relative_move
+        # Following line is necessary to properly set your opponents pawn position_from_own_start. If the pawn moves
+        # over its own start (and thus above board size), the position needs to be reset.
+        self.position_from_own_start = (self.position_from_own_start + board_size) % board_size
 
     # this function does not work. Position after a King is not 0 if pawn.color != player.color.
     # If fixed you could play ace and king cards on pawns of others

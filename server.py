@@ -109,7 +109,10 @@ if __name__ == "__main__":
             break
     print("game successfully finished")
 
+    # NExt: keep debugging server while playing to find why some plays are marked illegal.
+    # Issue1: player input for pawns and cards are not always properly processed. Other cards in hand are played on
+    # other pawns instead. --> this seems to be an issue where the server interprets a card play as illegal.
+
+    # Next: Also add a results screen at the end of a game where the end state is reported to all players.
     # Next: define all card_play_logic input and output in terms of game objects and card_play
     # Next: play
-    # Next: run games and debug
-
