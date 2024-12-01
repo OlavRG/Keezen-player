@@ -60,7 +60,7 @@ class Pawn:
         else:
             pass
 
-    def set_position_from_own_start_after_jack(self):
+    def set_position_from_own_start_after_jack(self, board_size):
         relative_move = self.position_at_start_of_turn - self.position
         self.position_from_own_start = self.position_from_own_start - relative_move
         # Following line is necessary to properly set your opponents pawn position_from_own_start. If the pawn moves
@@ -107,7 +107,7 @@ class Pawn:
             self.position_at_start_of_turn = self.position
             self.position_from_own_start_at_start_of_turn = self.position_from_own_start
             self.position = jack_other_pawn_position
-            self.set_position_from_own_start_after_jack()
+            self.set_position_from_own_start_after_jack(game_info.board_size)
             self.check_for_finish(game_info.board_size)
             self.check_for_negative_position(game_info.board_size)
             self.check_for_protection_from_own_0()

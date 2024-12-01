@@ -2,6 +2,7 @@ import _thread
 import json
 import random
 import network
+import server_logging
 from board_state_logic import create_starting_game_objects
 from board_state_logic import create_board_states_per_client
 from board_state_logic import set_pawns_to_current_player_PoV
@@ -16,6 +17,7 @@ from client_view import print_player_view
 if __name__ == "__main__":
 
     # start up code
+    logger = server_logging.create_logger()
     n_clients = 2
     initial_socket = network.ServerNetwork()
     sockets_to_clients = initial_socket.establish_connections(n_clients)
@@ -48,6 +50,7 @@ if __name__ == "__main__":
                 for client in range(n_clients):
                     sockets_to_clients[client].send(board_states[client])
                     client_card_play_dict = sockets_to_clients[client].receive()
+                    logger.info(client_card_play_dict)
 
                     # Define other_pawns and set pawn.position to the position from the current players POV
                     other_pawns = set_pawns_to_current_player_PoV(players, players[client], game_info)
