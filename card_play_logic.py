@@ -14,7 +14,7 @@ from player import Player
 def check_for_tackled_pawn_and_move_them_home(my_pawn, my_pawns, other_pawns):
     my_other_pawns = [value for value in my_pawns if value != my_pawn]
     for target_pawn in my_other_pawns + other_pawns:
-        if my_pawn.position == target_pawn.position:
+        if my_pawn.position == target_pawn.position and not target_pawn.finish: # finish should be implemented better
             target_pawn.move_home()
 
 

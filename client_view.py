@@ -72,6 +72,16 @@ def print_player_view(player, other_pawns):
             pawn_counter += 1
     print(player.color + ' hand: ' + ''.join(card.rank for card in player.hand))
 
+def print_board_overview(player, other_pawns, game_info, ):
+    print(f"\n--------------------------{player.color.upper()}--------------------------")
+    for player_color in game_info.player_colors:
+        print(f"\n{player_color.upper()[:6]} START\t| 1\t| 2\t| 3\t| 4\t| 5\t| 6\t| 7\t| 8\t| 9\t| 10\t| 11\t| 12\t| 13\t"
+              f"| 14\t| 15\t|")
+        print(f"\t\t| 1\t| 2\t| 3\t| 4\t| 5\t| 6\t| 7\t| 8\t| 9\t| 10\t| 11\t| 12\t| 13\t"
+              f"| 14\t| 15\t|")
+
+    for board_space in game_info.board_size:
+        print(f"\n\t{board_space} | loc\t\t| pawn")
 
 def pick_card_play(board_state):
     # Parse board state, return pawn objects, hand object, player object

@@ -21,9 +21,3 @@ Class hierarchy
 	Finish (
 	Pawn (att: color, position)
 	
-
-
-
-To do
-	- class hierarchy
-	- Read solid

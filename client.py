@@ -101,5 +101,6 @@ def main(server_IP):
         redrawWindow(win, p, p2)
 """
 
-server_IP = "192.168.1.109"
-main(server_IP)
+if __name__ == "__main__":
+    server_IP = input("What is the server IP?")
+    main(server_IP)

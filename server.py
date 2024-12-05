@@ -18,7 +18,7 @@ if __name__ == "__main__":
 
     # start up code
     logger = server_logging.create_logger()
-    n_clients = 2
+    n_clients = int(input("How many players are joining? Please state a number <9"))  # limit by create_starting_game_ob
     initial_socket = network.ServerNetwork()
     sockets_to_clients = initial_socket.establish_connections(n_clients)
     players, deck, discard_pile, game_info = create_starting_game_objects(n_clients)
@@ -48,6 +48,8 @@ if __name__ == "__main__":
             while any(hands):
                 # turns for each client
                 for client in range(n_clients):
+                    # for client_to_update in range(n_clients):
+                    #     sockets_to_clients[client].send(board_states[client_to_update])
                     sockets_to_clients[client].send(board_states[client])
                     client_card_play_dict = sockets_to_clients[client].receive()
                     logger.info(client_card_play_dict)
@@ -111,6 +113,7 @@ if __name__ == "__main__":
         if all_pawns_of_current_player_are_in_finish:
             break
     print("game successfully finished")
+    input("Type anything to close server")
 
     # NExt: keep debugging server while playing to find why some plays are marked illegal.
     # Issue1: player input for pawns and cards are not always properly processed. Other cards in hand are played on
