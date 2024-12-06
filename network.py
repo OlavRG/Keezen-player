@@ -64,5 +64,4 @@ class ServerNetwork(Network):
             conn, addr = self.socket_obj.accept()
             print("Connected to:", addr)
             sockets_to_clients[client] = ServerToClientNetwork(socket_to_client=conn, client_addr=addr, client_number=client)
-            bla = 1
         return sockets_to_clients

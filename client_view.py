@@ -10,11 +10,11 @@ def player_choice(q1, m1, m2, m3):
     choice = ""
     stupid_player_loop = 0
     while type(choice) is not bool:
-        choice = input(q1)
-        if choice == "Y":
+        choice = input(q1).casefold()
+        if choice == "y":
             choice = True
             print(m1)
-        elif choice == "N":
+        elif choice == "n":
             choice = False
             print(m2)
         else:
@@ -83,6 +83,7 @@ def print_board_overview(player, other_pawns, game_info, ):
     for board_space in game_info.board_size:
         print(f"\n\t{board_space} | loc\t\t| pawn")
 
+
 def pick_card_play(board_state):
     # Parse board state, return pawn objects, hand object, player object
     [player, other_pawns, discard_pile, game_info] = create_game_objects_from_board_state(board_state)
@@ -101,10 +102,10 @@ def pick_card_play(board_state):
     move_value = ""
 
     while type(card) is not Card:
-        card_choice = input("Pick a card (A23456789XJQK), or '0' if you can't play:")
-        if card_choice in ''.join(card.rank for card in player.hand) and len(card_choice) == 1:
+        card_choice = input("Pick a card (A23456789XJQK), or '0' if you can't play:").casefold()
+        if card_choice in ''.join(card.rank.casefold() for card in player.hand) and len(card_choice) == 1:
             for a_card in player.hand:
-                if a_card.rank == card_choice:
+                if a_card.rank.casefold() == card_choice:
                     card = a_card
                     print(f"You have picked {card.rank}")
                     break

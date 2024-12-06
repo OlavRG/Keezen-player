@@ -48,8 +48,6 @@ if __name__ == "__main__":
             while any(hands):
                 # turns for each client
                 for client in range(n_clients):
-                    # for client_to_update in range(n_clients):
-                    #     sockets_to_clients[client].send(board_states[client_to_update])
                     sockets_to_clients[client].send(board_states[client])
                     client_card_play_dict = sockets_to_clients[client].receive()
                     logger.info(client_card_play_dict)
