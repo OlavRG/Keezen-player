@@ -4,7 +4,7 @@ from board_state_logic import create_game_objects_from_board_state
 from card import Card
 from pawn import Pawn
 from game_info import GameInfo
-
+import random
 
 def player_choice(q1, m1, m2, m3):
     choice = ""
@@ -51,45 +51,54 @@ def does_player_want_to_play():
     return player_wants_to_play
 
 
-def print_player_view(player, other_pawns):
-    print(f"\n--------------------------{player.color.upper()}--------------------------")
-    print("Pawns on the board:")
-    pawn_counter = 1
-    for pawn in player.pawns + other_pawns:
-        if (not pawn.home and pawn.color == player.color or
-                not pawn.home and pawn.color != player.color and not pawn.finish):
-            print(f"{pawn_counter}. " + str(pawn))
-            pawn_counter += 1
-    print("\nPawns off the board:")
-    for pawn in player.pawns + other_pawns:
-        if pawn.home:
-            print(f"{pawn_counter}. " + str(pawn))
-            pawn_counter += 1
-    print("\nEnemy pawns in finish:")
-    for pawn in player.pawns + other_pawns:
-        if pawn.color != player.color and pawn.finish:
-            print(f"{pawn_counter}. " + str(pawn))
-            pawn_counter += 1
-    print(player.color + ' hand: ' + ''.join(card.rank for card in player.hand))
+def print_player_view(player, current_player_color, other_pawns, game_info):
+    # Determine player order from clients view
+    client_index = game_info.player_colors.index(player.color)
+    player_colors_in_turn_order = game_info.player_colors[client_index:] + game_info.player_colors[:client_index]
+    all_pawns = player.pawns + other_pawns
+    all_pawns_on_board = [pawn for pawn in all_pawns if not pawn.home and not pawn.finish]
+    positions_of_all_pawns_on_board = [pawn.position for pawn in all_pawns_on_board]
 
-def print_board_overview(player, other_pawns, game_info, ):
-    print(f"\n--------------------------{player.color.upper()}--------------------------")
-    for player_color in game_info.player_colors:
-        print(f"\n{player_color.upper()[:6]} START\t| 1\t| 2\t| 3\t| 4\t| 5\t| 6\t| 7\t| 8\t| 9\t| 10\t| 11\t| 12\t| 13\t"
-              f"| 14\t| 15\t|")
-        print(f"\t\t| 1\t| 2\t| 3\t| 4\t| 5\t| 6\t| 7\t| 8\t| 9\t| 10\t| 11\t| 12\t| 13\t"
-              f"| 14\t| 15\t|")
+    print(f"\n==========================={current_player_color.upper()}'s turn===========================")
+    print("\nSTART\t\t|BOARD")
+    for player_color in player_colors_in_turn_order:
+        player_turn_index = player_colors_in_turn_order.index(player_color)
+        print(f"{player_color.upper()[:8]: <8}\t", end="|")
+        for position_from_player_color_start in range(16):
+            position = position_from_player_color_start + 16*player_turn_index
+            if position in positions_of_all_pawns_on_board:
+                pawn_index = positions_of_all_pawns_on_board.index(position)
+                # Color strings are limited to 6 characters such that
+                # "|" + color_string + "\t" does not exceed two tab lengths (8characters)
+                # Similarly, "<6" pads color strings with spaces up to 6 chars, such that
+                # "|" + color_string + "\t" is never smaller than two tab lengths (8characters)
+                print(f"{all_pawns_on_board[pawn_index].color.casefold()[:6]: <6}\t", end="|")
+            elif position % 4 == 0:
+                print(f"{str(position)[:6]: <6}\t", end="|")
+            else:
+                print("\t\t", end="|")
+        print("") # this adds an enter after every line
 
-    for board_space in game_info.board_size:
-        print(f"\n\t{board_space} | loc\t\t| pawn")
+    # Now for pawns in finish
+    print("\nFINISH")
+    for player_color in player_colors_in_turn_order:
+        all_pawns_in_finish_of_this_color = [pawn for pawn in all_pawns if pawn.finish and pawn.color == player_color]
+        player_turn_index = player_colors_in_turn_order.index(player_color)
+        print(f"{player_color.upper()[:8]: <8}\t", end="|")
+        for finish_position in range(4):
+            if (finish_position + game_info.board_size in
+                    [pawn.position_from_own_start for pawn in all_pawns_in_finish_of_this_color]):
+                print(f"{player_color.casefold()[:6]: <6}\t", end="|")
+            elif player_color == player.color:
+                finish_position_from_own_start = str(finish_position + game_info.board_size)
+                print(f"{finish_position_from_own_start.casefold()[:6]: <6}\t", end="|")
+            else:
+                print("\t\t", end="|")
+        print("")  # this adds an enter after every line
+    print('\n' + player.color + ' hand: ' + ''.join(card.rank for card in player.hand))
 
 
-def pick_card_play(board_state):
-    # Parse board state, return pawn objects, hand object, player object
-    [player, other_pawns, discard_pile, game_info] = create_game_objects_from_board_state(board_state)
-
-    print_player_view(player, other_pawns)
-
+def pick_card_play(player, other_pawns, game_info):
     if not player.hand:
         card_play_dict = None
         print("Hand is empty, turn is automatically skipped.")
@@ -116,23 +125,37 @@ def pick_card_play(board_state):
             card = None
             print(f"\"{card_choice}\" is not in " + ''.join(card.rank for card in player.hand))
 
+    my_pawns_on_board = [pawn for pawn in player.pawns if not pawn.home]
+    other_pawns_on_board = [pawn for pawn in other_pawns if not pawn.finish and not pawn.home]
+    all_pawns_on_board = my_pawns_on_board + other_pawns_on_board
+    positions_of_all_pawns_on_board = [pawn.position for pawn in all_pawns_on_board]
     while type(my_pawn) is not Pawn:
-        pawn_choice = input("Pick a pawn by #:")
+        pawn_choice = input(f"Pick a pawn by position (0-{game_info.board_size + 3}), at home (H), "
+                            f"or a different card (-1):")
         try:
-            pawn_choice = int(pawn_choice)
-        except ValueError:
-            print("Type an int please")
-        else:
-            if pawn_choice in range(1, len(player.pawns + other_pawns)+1):
-                # Note that the pawn order here must match the pawn order in print_player_view
-                my_pawn = ([pawn for pawn in player.pawns + other_pawns if
-                            not pawn.home and pawn.color == player.color or
-                            not pawn.home and pawn.color != player.color and not pawn.finish] +
-                           [pawn for pawn in player.pawns + other_pawns if pawn.home] +
-                           [pawn for pawn in player.pawns + other_pawns if
-                            pawn.color != player.color and pawn.finish])[pawn_choice-1]
+            if pawn_choice.casefold() == 'h':
+                my_pawn = [pawn for pawn in player.pawns if pawn.home][0]
             else:
-                print(f"Pick a pawn between 1 and {len(player.pawns + other_pawns)}")
+                pawn_choice = int(pawn_choice)
+        except ValueError:
+            print("Type an int or 'H' please")
+        except IndexError:
+            print("There are no pawns in your home base")
+        else:
+            if pawn_choice = int(pawn_choice):
+                if pawn_choice in positions_of_all_pawns_on_board:
+                    my_pawn_index = positions_of_all_pawns_on_board.index(pawn_choice)
+                    my_pawn = all_pawns_on_board[my_pawn_index]
+                elif pawn_choice.casefold() == 'h':
+                    my_pawn = [pawn for pawn in player.pawns if pawn.home][0]
+                elif pawn_choice == -1:
+                    retort = random.randint(1,2)
+                    if retort == 1:
+                        print("Tafel plakt!")
+                    elif retort == 2:
+                        print("No take backsies!")
+            else:
+                print(f"Pick a pawn with position between 0 and {game_info.board_size-1}")
     if card.is_splittable or card.rank == "J":
         while type(target_pawn) is not Pawn:
             target_pawn_choice = input("Pick a second pawn by #, or '0' for no second pawn:")

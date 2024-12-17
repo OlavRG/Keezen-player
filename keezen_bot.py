@@ -19,7 +19,7 @@ def keezen_bot(board_state):
 
     # Parse board state, return pawn objects, hand object, player object
     # board_state = board_state_niche_tester.board_state_blocked
-    [player, other_pawns, discard_pile, game_info] = create_game_objects_from_board_state(board_state)
+    [player, current_player_color, other_pawns, discard_pile, game_info] = create_game_objects_from_board_state(board_state)
 
     dead_end_plays = []
     # turn 1

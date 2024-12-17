@@ -14,6 +14,7 @@ import random
 
 def create_game_objects_from_board_state(board_state):
     player = Player(board_state["my_color"])
+    current_player_color = board_state["current_player_color"]
     for card in board_state["hand"]:
         player.hand.append(Card(card))
     # get unique colors with same order as board_state. This determines player order!
@@ -44,7 +45,7 @@ def create_game_objects_from_board_state(board_state):
             position_relative_to_player_start = position_relative_to_player_start % game_info.board_size
             other_pawns.append(Pawn(pawn["color"], position_relative_to_player_start, pawn["position"],
                                     pawn["home"], pawn["finish"], is_protected))
-    return player, other_pawns, discard_pile, game_info
+    return player, current_player_color, other_pawns, discard_pile, game_info
 
 
 def set_pawns_to_current_player_PoV(players, current_player, game_info):
@@ -93,6 +94,7 @@ def create_board_states_per_client(players, deck, game_info):
         other_hands_size[n_player] = [len(any_player.hand) for any_player in players if any_player != players[n_player]]
         board_states[n_player]["other_hands"] = other_hands_size[n_player]
         board_states[n_player]["my_color"] = players[n_player].color
+        board_states[n_player]["current_player_color"] = ''
         card_history.append({"color": players[n_player].color, "card_history": players[n_player].card_history})
         board_states[n_player]["card_history"] = card_history
         for pawn in players[n_player].pawns:

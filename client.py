@@ -60,25 +60,38 @@ def redrawWindow(win,player, player2):
     pygame.display.update()
 
 
-def main(server_IP):
-    n = ClientNetwork(server_IP)
+def main(server_ip):
+    n = ClientNetwork(server_ip)
     all_pawns_of_current_player_are_in_finish = False
     player_is_human = client_view.is_player_human()
     n.connect()
     while not all_pawns_of_current_player_are_in_finish:
-        board_state = n.receive()
-        if not player_is_human:
-            card_play = keezen_bot(board_state)
-        else:
-            card_play = client_view.pick_card_play(board_state)
-        n.send(card_play)
-        all_pawns_of_current_player_are_in_finish = n.receive()
+        message = n.receive()
+        match message["header"]:
+            case 'view_board_state':
+                board_state = message["content"]
+                # Parse board state, return pawn objects, hand object, player object
+                [player, current_player_color, other_pawns, discard_pile, game_info] = client_view.create_game_objects_from_board_state(board_state)
 
-    bla = 1
+                client_view.print_player_view(player, current_player_color, other_pawns, game_info)
+
+            case 'play_from_board_state':
+                board_state = message["content"]
+                # Parse board state, return pawn objects, hand object, player object
+                [player, current_player_color, other_pawns, discard_pile, game_info] = client_view.create_game_objects_from_board_state(board_state)
+                if not player_is_human:
+                    card_play = keezen_bot(board_state)
+                else:
+                    card_play = client_view.pick_card_play(player, other_pawns, game_info)
+                n.send(card_play)
+
+            case 'all_pawns_of_current_player_are_in_finish':
+                all_pawns_of_current_player_are_in_finish = message["content"]
+                print(all_pawns_of_current_player_are_in_finish)
 
 
 """            
-    run = True
+    run = True  
     n = Network()
     startPos = n.getPos()
     p = Player(startPos[0],startPos[1],100,100,(0,255,0))

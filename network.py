@@ -65,3 +65,17 @@ class ServerNetwork(Network):
             print("Connected to:", addr)
             sockets_to_clients[client] = ServerToClientNetwork(socket_to_client=conn, client_addr=addr, client_number=client)
         return sockets_to_clients
+
+
+def send_personal_message_to_each_client(sockets_to_clients, n_clients, header, content):
+    for client_to_update in range(n_clients):
+        sockets_to_clients[client_to_update].send({"header": header,
+                                                   "content": content[client_to_update]})
+
+
+def send_same_message_to_each_client(sockets_to_clients, n_clients, header, content):
+    bla = []
+    for client_to_update in range(n_clients):
+        bla.append({"header": header, "content": content})
+        sockets_to_clients[client_to_update].send({"header": header,
+                                                   "content": content})

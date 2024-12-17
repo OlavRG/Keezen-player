@@ -45,17 +45,28 @@ if __name__ == "__main__":
                 raise Exception(f"Unexpected deck size. Deck is either greater than 13*players, or not dividable by 4."
                                 f"{len(deck)=}")
             board_states = create_board_states_per_client(players, deck, game_info)
+
             while any(hands):
                 # turns for each client
                 for client in range(n_clients):
-                    sockets_to_clients[client].send(board_states[client])
+                    # Update current player in board state
+                    for board_state in board_states:
+                        board_state["current_player_color"] = players[client].color
+
+                    # Send board state and cards in hand to all players at start of each turn
+                    network.send_personal_message_to_each_client(sockets_to_clients, n_clients, 'view_board_state',
+                                                                 board_states)
+                    # Ask current player to make a move
+                    sockets_to_clients[client].send({"header": 'play_from_board_state',
+                                                     "content": board_states[client]})
                     client_card_play_dict = sockets_to_clients[client].receive()
                     logger.info(client_card_play_dict)
 
                     # Define other_pawns and set pawn.position to the position from the current players POV
                     other_pawns = set_pawns_to_current_player_PoV(players, players[client], game_info)
+                    current_player_color = players[client].color
 
-                    print_player_view(players[client], other_pawns)
+                    print_player_view(players[client], current_player_color, other_pawns, game_info)
 
                     print('client card play: ', client_card_play_dict)
 
@@ -100,7 +111,10 @@ if __name__ == "__main__":
                                                                                        discard_pile)
                     board_states = create_board_states_per_client(players, deck, game_info)
                     all_pawns_of_current_player_are_in_finish = all([pawn.finish for pawn in players[client].pawns])
-                    sockets_to_clients[client].send(all_pawns_of_current_player_are_in_finish)
+                    print("before send all pawns")
+                    network.send_same_message_to_each_client(sockets_to_clients, n_clients,
+                                                             'all_pawns_of_current_player_are_in_finish',
+                                                             all_pawns_of_current_player_are_in_finish)
                     if all_pawns_of_current_player_are_in_finish:
                         print("player " + str(players[client].color) + ' has won')
                         break
