@@ -1,72 +1,15 @@
-import pygame
 from network import ClientNetwork
 from keezen_bot import keezen_bot
 import client_view
 
-def open_display():
-    width = 500
-    height = 500
-    win = pygame.display.set_mode((width, height))
-    pygame.display.set_caption("Client")
-
-
-class Player:
-    def __init__(self, x, y, width, height, color):
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self.color = color
-        self.rect = (x,y,width,height)
-        self.vel = 3
-
-    def draw(self, win):
-        pygame.draw.rect(win, self.color, self.rect)
-
-    def move(self):
-        keys = pygame.key.get_pressed()
-
-        if keys[pygame.K_LEFT]:
-            self.x -= self.vel
-
-        if keys[pygame.K_RIGHT]:
-            self.x += self.vel
-
-        if keys[pygame.K_UP]:
-            self.y -= self.vel
-
-        if keys[pygame.K_DOWN]:
-            self.y += self.vel
-
-        self.update()
-
-    def update(self):
-        self.rect = (self.x, self.y, self.width, self.height)
-
-
-def read_pos(str):
-    str = str.split(",")
-    return int(str[0]), int(str[1])
-
-
-def make_pos(tup):
-    return str(tup[0]) + "," + str(tup[1])
-
-
-def redrawWindow(win,player, player2):
-    win.fill((255,255,255))
-    player.draw(win)
-    player2.draw(win)
-    pygame.display.update()
-
 
 def main(server_ip):
-    n = ClientNetwork(server_ip)
+    socket_to_server = ClientNetwork(server_ip)
     all_pawns_of_current_player_are_in_finish = False
     player_is_human = client_view.is_player_human()
-    n.connect()
+    socket_to_server.connect()
     while not all_pawns_of_current_player_are_in_finish:
-        message = n.receive()
+        message = socket_to_server.receive()
         match message["header"]:
             case 'view_board_state':
                 board_state = message["content"]
@@ -83,36 +26,12 @@ def main(server_ip):
                     card_play = keezen_bot(board_state)
                 else:
                     card_play = client_view.pick_card_play(player, other_pawns, game_info)
-                n.send(card_play)
+                socket_to_server.send(card_play)
 
             case 'all_pawns_of_current_player_are_in_finish':
                 all_pawns_of_current_player_are_in_finish = message["content"]
                 print(all_pawns_of_current_player_are_in_finish)
 
-
-"""            
-    run = True  
-    n = Network()
-    startPos = n.getPos()
-    p = Player(startPos[0],startPos[1],100,100,(0,255,0))
-    p2 = Player(0,0,100,100,(255,0,0))
-    clock = pygame.time.Clock()
-
-    while run:
-        clock.tick(60)
-        p2Pos = n.send((p.x, p.y))
-        p2.x = p2Pos[0]
-        p2.y = p2Pos[1]
-        p2.update()
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-                pygame.quit()
-
-        p.move()
-        redrawWindow(win, p, p2)
-"""
 
 if __name__ == "__main__":
     server_IP = input("What is the server IP?")

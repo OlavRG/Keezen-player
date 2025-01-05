@@ -142,7 +142,7 @@ def pick_card_play(player, other_pawns, game_info):
         except IndexError:
             print("There are no pawns in your home base")
         else:
-            if pawn_choice = int(pawn_choice):
+            if pawn_choice == int(pawn_choice):
                 if pawn_choice in positions_of_all_pawns_on_board:
                     my_pawn_index = positions_of_all_pawns_on_board.index(pawn_choice)
                     my_pawn = all_pawns_on_board[my_pawn_index]
