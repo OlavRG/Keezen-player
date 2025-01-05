@@ -30,7 +30,7 @@ def main(server_ip):
 
             case 'all_pawns_of_current_player_are_in_finish':
                 all_pawns_of_current_player_are_in_finish = message["content"]
-                print(all_pawns_of_current_player_are_in_finish)
+                print('Did the current player win? ' + all_pawns_of_current_player_are_in_finish)
 
 
 if __name__ == "__main__":

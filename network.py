@@ -17,7 +17,14 @@ class Network:
         try:
             return json.loads(self.socket_obj.recv(2048).decode("utf-8"))
         except json.decoder.JSONDecodeError as e:
+            print('JSONDecodeError: ')
             print(e)
+        except ConnectionResetError as error:
+            input('Check for error manually, '
+                  'input anything to continue with the ConnectionResetError [WinError 10054]')
+        except ConnectionAbortedError as error:
+            input('Check for error manually, '
+                  'input anything to continue with the ConnectionAbortedError [WinError 10053]')
 
     def close(self):
         self.socket_obj.close()
