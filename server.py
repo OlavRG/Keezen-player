@@ -75,7 +75,6 @@ if __name__ == "__main__":
                     legal_card_plays = [card_play for card_play in all_card_plays if card_play[-1]["card_play_is_legal"]]
                     legal_card_play_dicts = list(map(card_play_to_dict, legal_card_plays))
                     if not legal_card_play_dicts:
-                        print('No legal card play available')
                         # Discard hand
                         if players[client].hand:
                             discard_pile.extend(players[client].hand[:])

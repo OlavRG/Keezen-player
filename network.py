@@ -1,6 +1,8 @@
 import socket
 import json
 
+MAX_MESSAGE_LENGTH_IN_BYTES = 4
+BUFFER_SIZE = 2048
 
 class Network:
     def __init__(self):
@@ -9,15 +11,38 @@ class Network:
 
     def send(self, data):
         try:
-            self.socket_obj.send(json.dumps(data).encode("utf-8"))
+            message = json.dumps(data)
+            message_length = len(message.encode('utf-8'))
+            size_header = message_length.to_bytes(MAX_MESSAGE_LENGTH_IN_BYTES, byteorder='big')
+            self.socket_obj.sendall(size_header + message.encode("utf-8"))
         except socket.error as e:
             print(e)
 
     def receive(self):
         try:
-            return json.loads(self.socket_obj.recv(2048).decode("utf-8"))
+            # Receive the length
+            size_header = self.socket_obj.recv(MAX_MESSAGE_LENGTH_IN_BYTES)
+
+            # Parse the header
+            message_length = int.from_bytes(size_header[0:MAX_MESSAGE_LENGTH_IN_BYTES], byteorder='big')
+
+            # Receive the message data
+            chunks = []
+            bytes_recd = 0
+            while bytes_recd < message_length:
+                chunk = self.socket_obj.recv(min(message_length - bytes_recd,
+                                      BUFFER_SIZE))
+                if not chunk:
+                    raise RuntimeError("ERROR")
+                chunks.append(chunk)
+                bytes_recd += len(chunk)
+
+            encoded_message = b"".join(chunks)
+            # print('Number of bytes received: ' + str(bytes_recd))
+            # print('Decoded message: ' + encoded_message.decode("utf-8"))
+            return json.loads(encoded_message.decode("utf-8"))
         except json.decoder.JSONDecodeError as e:
-            print('JSONDecodeError: ')
+            print("JSONDecodeError: ")
             print(e)
         except ConnectionResetError as error:
             input('Check for error manually, '
@@ -62,7 +87,7 @@ class ServerNetwork(Network):
         except socket.error as e:
             str(e)
 
-        self.socket_obj.listen(2)
+        self.socket_obj.listen(n_clients)
         print("IP is " + str(self.server_IP) + ", port: " + str(self.port))
         print("Waiting for a connection, Server Started")
 
