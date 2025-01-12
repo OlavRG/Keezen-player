@@ -38,8 +38,6 @@ class Network:
                 bytes_recd += len(chunk)
 
             encoded_message = b"".join(chunks)
-            # print('Number of bytes received: ' + str(bytes_recd))
-            # print('Decoded message: ' + encoded_message.decode("utf-8"))
             return json.loads(encoded_message.decode("utf-8"))
         except json.decoder.JSONDecodeError as e:
             print("JSONDecodeError: ")

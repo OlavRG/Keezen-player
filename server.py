@@ -69,6 +69,9 @@ if __name__ == "__main__":
                     print_player_view(players[client], current_player_color, other_pawns, game_info)
 
                     print('client card play: ', client_card_play_dict)
+                    network.send_same_message_to_each_client(sockets_to_clients, n_clients,
+                                                             'client_card_play_dict',
+                                                             client_card_play_dict)
 
                     # Make a list of all possible plays and check if the clients move is in it
                     all_card_plays = test_all_possible_plays(players[client], other_pawns, discard_pile, game_info)
@@ -110,7 +113,6 @@ if __name__ == "__main__":
                                                                                        discard_pile)
                     board_states = create_board_states_per_client(players, deck, game_info)
                     all_pawns_of_current_player_are_in_finish = all([pawn.finish for pawn in players[client].pawns])
-                    print("before send all pawns")
                     network.send_same_message_to_each_client(sockets_to_clients, n_clients,
                                                              'all_pawns_of_current_player_are_in_finish',
                                                              all_pawns_of_current_player_are_in_finish)
