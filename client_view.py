@@ -133,29 +133,28 @@ def pick_card_play(player, other_pawns, game_info):
         pawn_choice = input(f"Pick a pawn by position (0-{game_info.board_size + 3}), at home (H), "
                             f"or a different card (-1):")
         try:
-            if pawn_choice.casefold() == 'h':
-                my_pawn = [pawn for pawn in player.pawns if pawn.home][0]
-            else:
-                pawn_choice = int(pawn_choice)
+            pawn_choice = int(pawn_choice)
         except ValueError:
-            print("Type an int or 'H' please")
-        except IndexError:
-            print("There are no pawns in your home base")
-        else:
-            if pawn_choice == int(pawn_choice):
-                if pawn_choice in positions_of_all_pawns_on_board:
-                    my_pawn_index = positions_of_all_pawns_on_board.index(pawn_choice)
-                    my_pawn = all_pawns_on_board[my_pawn_index]
-                elif pawn_choice.casefold() == 'h':
+            if pawn_choice.casefold() == 'h':
+                try:
                     my_pawn = [pawn for pawn in player.pawns if pawn.home][0]
-                elif pawn_choice == -1:
-                    retort = random.randint(1,2)
-                    if retort == 1:
-                        print("Tafel plakt!")
-                    elif retort == 2:
-                        print("No take backsies!")
+                except IndexError:
+                    print("There are no pawns in your home base")
             else:
-                print(f"Pick a pawn with position between 0 and {game_info.board_size-1}")
+                print("Type an int or 'H' please")
+        else:
+            if pawn_choice in positions_of_all_pawns_on_board:
+                my_pawn_index = positions_of_all_pawns_on_board.index(pawn_choice)
+                my_pawn = all_pawns_on_board[my_pawn_index]
+            elif pawn_choice == -1:
+                retort = random.randint(1, 2)
+                if retort == 1:
+                    print("Tafel plakt!")
+                elif retort == 2:
+                    print("No take backsies!")
+            else:
+                print(f"There is no pawn at {pawn_choice}")
+
     if card.is_splittable or card.rank == "J":
         while type(target_pawn) is not Pawn:
             target_pawn_choice = input("Pick a second pawn by #, or '0' for no second pawn:")
