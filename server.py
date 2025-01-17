@@ -54,12 +54,12 @@ if __name__ == "__main__":
                         board_state["current_player_color"] = players[client].color
 
                     # Send board state and cards in hand to all players at start of each turn
-                    network.send_personal_message_to_each_client(sockets_to_clients, n_clients, 'view_board_state',
+                    sockets_to_clients.send_personal_message_to_each_client('view_board_state',
                                                                  board_states)
                     # Ask current player to make a move
-                    sockets_to_clients[client].send({"header": 'play_from_board_state',
-                                                     "content": board_states[client]})
-                    client_card_play_dict = sockets_to_clients[client].receive()
+                    sockets_to_clients.send_to_a_client(client, {"header": 'play_from_board_state',
+                                                                 "content": board_states[client]})
+                    client_card_play_dict = sockets_to_clients.receive_from_a_client(client)
                     logger.info(client_card_play_dict)
 
                     # Define other_pawns and set pawn.position to the position from the current players POV
@@ -69,9 +69,8 @@ if __name__ == "__main__":
                     print_player_view(players[client], current_player_color, other_pawns, game_info)
 
                     print('client card play: ', client_card_play_dict)
-                    network.send_same_message_to_each_client(sockets_to_clients, n_clients,
-                                                             'client_card_play_dict',
-                                                             client_card_play_dict)
+                    sockets_to_clients.send_same_message_to_each_client(
+                        'client_card_play_dict', client_card_play_dict)
 
                     # Make a list of all possible plays and check if the clients move is in it
                     all_card_plays = test_all_possible_plays(players[client], other_pawns, discard_pile, game_info)
@@ -113,9 +112,8 @@ if __name__ == "__main__":
                                                                                        discard_pile)
                     board_states = create_board_states_per_client(players, deck, game_info)
                     all_pawns_of_current_player_are_in_finish = all([pawn.finish for pawn in players[client].pawns])
-                    network.send_same_message_to_each_client(sockets_to_clients, n_clients,
-                                                             'all_pawns_of_current_player_are_in_finish',
-                                                             all_pawns_of_current_player_are_in_finish)
+                    sockets_to_clients.send_same_message_to_each_client(
+                        'all_pawns_of_current_player_are_in_finish', all_pawns_of_current_player_are_in_finish)
                     if all_pawns_of_current_player_are_in_finish:
                         print("player " + str(players[client].color) + ' has won')
                         break

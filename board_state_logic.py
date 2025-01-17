@@ -161,7 +161,3 @@ def create_starting_board_state(n_players):
 
     return board_states_start
 """
-
-
-
-bla =1
