@@ -5,6 +5,15 @@ from card import Card
 from pawn import Pawn
 from game_info import GameInfo
 import random
+import socket
+
+
+def get_server_ip():
+    server_ip = input("What is the server IP?")
+    if server_ip == '0':
+        server_ip = socket.gethostbyname(socket.gethostname())
+    return server_ip
+
 
 def player_choice(q1, m1, m2, m3):
     choice = ""
@@ -98,33 +107,7 @@ def print_player_view(player, current_player_color, other_pawns, game_info):
     print('\n' + player.color + ' hand: ' + ''.join(card.rank for card in player.hand))
 
 
-def pick_card_play(player, other_pawns, game_info):
-    if not player.hand:
-        card_play_dict = None
-        print("Hand is empty, turn is automatically skipped.")
-        return card_play_dict
-
-    # Initialize card play variables
-    card = ""
-    my_pawn = ""
-    target_pawn = ""
-    move_value = ""
-
-    while type(card) is not Card:
-        card_choice = input("Pick a card (A23456789XJQK), or '0' if you can't play:").casefold()
-        if card_choice in ''.join(card.rank.casefold() for card in player.hand) and len(card_choice) == 1:
-            for a_card in player.hand:
-                if a_card.rank.casefold() == card_choice:
-                    card = a_card
-                    print(f"You have picked {card.rank}")
-                    break
-        elif card_choice == '0':
-            card_play_dict = None
-            return card_play_dict
-        else:
-            card = None
-            print(f"\"{card_choice}\" is not in " + ''.join(card.rank for card in player.hand))
-
+def pick_a_pawn(player, other_pawns, game_info, my_pawn):
     my_pawns_on_board = [pawn for pawn in player.pawns if not pawn.home]
     other_pawns_on_board = [pawn for pawn in other_pawns if not pawn.finish and not pawn.home]
     all_pawns_on_board = my_pawns_on_board + other_pawns_on_board
@@ -154,8 +137,72 @@ def pick_card_play(player, other_pawns, game_info):
                     print("No take backsies!")
             else:
                 print(f"There is no pawn at {pawn_choice}")
+    return my_pawn
+
+
+def pick_card_play(player, other_pawns, game_info):
+    if not player.hand:
+        card_play_dict = None
+        print("Hand is empty, turn is automatically skipped.")
+        return card_play_dict
+
+    # Initialize card play variables
+    card = ""
+    my_pawn = ""
+    target_pawn = ""
+    move_value = ""
+
+    while type(card) is not Card:
+        card_choice = input("Pick a card (A23456789XJQK), or '0' if you can't play:").casefold()
+        if card_choice in ''.join(card.rank.casefold() for card in player.hand) and len(card_choice) == 1:
+            for a_card in player.hand:
+                if a_card.rank.casefold() == card_choice:
+                    card = a_card
+                    print(f"You have picked {card.rank}")
+                    break
+        elif card_choice == '0':
+            card_play_dict = None
+            return card_play_dict
+        else:
+            card = None
+            print(f"\"{card_choice}\" is not in " + ''.join(card.rank for card in player.hand))
+
+    my_pawn = pick_a_pawn(player, other_pawns, game_info, my_pawn)
+    """
+    my_pawns_on_board = [pawn for pawn in player.pawns if not pawn.home]
+    other_pawns_on_board = [pawn for pawn in other_pawns if not pawn.finish and not pawn.home]
+    all_pawns_on_board = my_pawns_on_board + other_pawns_on_board
+    positions_of_all_pawns_on_board = [pawn.position for pawn in all_pawns_on_board]
+    while type(my_pawn) is not Pawn:
+        pawn_choice = input(f"Pick a pawn by position (0-{game_info.board_size + 3}), at home (H), "
+                            f"or a different card (-1):")
+        try:
+            pawn_choice = int(pawn_choice)
+        except ValueError:
+            if pawn_choice.casefold() == 'h':
+                try:
+                    my_pawn = [pawn for pawn in player.pawns if pawn.home][0]
+                except IndexError:
+                    print("There are no pawns in your home base")
+            else:
+                print("Type an int or 'H' please")
+        else:
+            if pawn_choice in positions_of_all_pawns_on_board:
+                my_pawn_index = positions_of_all_pawns_on_board.index(pawn_choice)
+                my_pawn = all_pawns_on_board[my_pawn_index]
+            elif pawn_choice == -1:
+                retort = random.randint(1, 2)
+                if retort == 1:
+                    print("Tafel plakt!")
+                elif retort == 2:
+                    print("No take backsies!")
+            else:
+                print(f"There is no pawn at {pawn_choice}")
+    """
 
     if card.is_splittable or card.rank == "J":
+        target_pawn = pick_a_pawn(player, other_pawns, game_info, target_pawn)
+        """
         while type(target_pawn) is not Pawn:
             target_pawn_choice = input("Pick a second pawn by #, or '0' for no second pawn:")
             try:
@@ -176,6 +223,7 @@ def pick_card_play(player, other_pawns, game_info):
                     break
                 else:
                     print(f"Pick a pawn between 1 and {len(player.pawns + other_pawns)}")
+        """
     else:
         target_pawn = None
     if card.is_splittable and target_pawn:
@@ -192,31 +240,3 @@ def pick_card_play(player, other_pawns, game_info):
     return card_play_dict
 
     # NExt: change this into a GUI, most likely as an object
-
-
-"""
-# Following is code for an interface that allows illegal plays to be passed.
-        card_choice = input("Pick a card from your hand by typing the appropriate letter. Legal values are "
-                            "A23456789XJQK.")
-        if card_choice == "K":
-            home_choice = True
-        elif card_choice is not "A" and card_choice is not "K":
-            home_choice = False
-        else:
-            home_choice = input("You want to play \"A\". Do you want to place a new pawn on the board, Y/N?")
-            if home_choice == "Y":
-                home_choice = True
-            else:
-                home_choice = False
-        pawn_choice = input(
-            "Now type the position (int) of the target pawn")
-
-        card_play_dict = {"card": card_choice,
-                          "primary_pawn_color": player.color,
-                          "primary_pawn_position": pawn_choice,
-                          "primary_pawn_home": home_choice,
-                          "secondary_pawn_color": secondary_pawn_color,
-                          "secondary_pawn_position": secondary_pawn_position,
-                          "primary_move": card_play["primary_move"]}
-
-"""

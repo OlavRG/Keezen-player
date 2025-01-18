@@ -39,7 +39,8 @@ class Network:
                 bytes_recd += len(chunk)
 
             encoded_message = b"".join(chunks)
-            return json.loads(encoded_message.decode("utf-8"))
+            test_dict = json.loads(encoded_message.decode("utf-8"))
+            return test_dict
         except json.decoder.JSONDecodeError as e:
             print("JSONDecodeError: ")
             print(e)
@@ -78,16 +79,17 @@ class SocketToClient(Network):
 class SocketsToClients:
     def __init__(self):
         self.all_sockets_to_clients = []
-        self.n_clients = len(self.all_sockets_to_clients)
+        self.n_clients = 0
 
     def add_socket(self, new_socket: SocketToClient):
         self.all_sockets_to_clients.append(new_socket)
+        self.n_clients = len(self.all_sockets_to_clients)
 
     def send_to_a_client(self, client_number, data):
         self.all_sockets_to_clients[client_number].send(data)
 
     def receive_from_a_client(self, client_number):
-        self.all_sockets_to_clients[client_number].receive()
+        return self.all_sockets_to_clients[client_number].receive()
 
     def send_personal_message_to_each_client(self, header, content: list):
         for client in range(self.n_clients):
