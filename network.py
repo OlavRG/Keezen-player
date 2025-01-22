@@ -8,7 +8,7 @@ BUFFER_SIZE = 2048
 class Network:
     def __init__(self):
         self.socket_obj = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.port = 5555
+        self.port = 5556
 
     def send(self, data):
         try:
@@ -111,13 +111,12 @@ class ServerNetwork(Network):
         try:
             self.socket_obj.bind((self.server_IP, self.port))
         except socket.error as e:
-            str(e)
+            print(e)
 
         self.socket_obj.listen(n_clients)
         print("IP is " + str(self.server_IP) + ", port: " + str(self.port))
         print("Waiting for a connection, Server Started")
 
-        sockets_to_clients = [None] * n_clients
         sockets_to_clients = SocketsToClients()
         for client in range(0, n_clients):
             conn, addr = self.socket_obj.accept()

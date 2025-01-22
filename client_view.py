@@ -6,6 +6,7 @@ from pawn import Pawn
 from game_info import GameInfo
 import random
 import socket
+#from rich import print
 
 
 def get_server_ip():
@@ -82,10 +83,10 @@ def print_player_view(player, current_player_color, other_pawns, game_info):
                 # Similarly, "<6" pads color strings with spaces up to 6 chars, such that
                 # "|" + color_string + "\t" is never smaller than two tab lengths (8characters)
                 print(f"{all_pawns_on_board[pawn_index].color.casefold()[:6]: <6}\t", end="|")
-            elif position % 4 == 0:
+            elif position % 1 == 0:
                 print(f"{str(position)[:6]: <6}\t", end="|")
             else:
-                print("\t\t", end="|")
+                print("\t", end="|")
         print("") # this adds an enter after every line
 
     # Now for pawns in finish
@@ -95,14 +96,15 @@ def print_player_view(player, current_player_color, other_pawns, game_info):
         player_turn_index = player_colors_in_turn_order.index(player_color)
         print(f"{player_color.upper()[:8]: <8}\t", end="|")
         for finish_position in range(4):
-            if (finish_position + game_info.board_size in
-                    [pawn.position_from_own_start for pawn in all_pawns_in_finish_of_this_color]):
+            if (finish_position in
+                    [pawn.position_from_own_start % game_info.board_size_per_player
+                     for pawn in all_pawns_in_finish_of_this_color]):
                 print(f"{player_color.casefold()[:6]: <6}\t", end="|")
             elif player_color == player.color:
                 finish_position_from_own_start = str(finish_position + game_info.board_size)
                 print(f"{finish_position_from_own_start.casefold()[:6]: <6}\t", end="|")
             else:
-                print("\t\t", end="|")
+                print("\t", end="|")
         print("")  # this adds an enter after every line
     print('\n' + player.color + ' hand: ' + ''.join(card.rank for card in player.hand))
 

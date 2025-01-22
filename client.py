@@ -58,6 +58,7 @@ def main():
             case 'all_pawns_of_current_player_are_in_finish':
                 all_pawns_of_current_player_are_in_finish = message["content"]
                 print('Did the current player win? ' + str(all_pawns_of_current_player_are_in_finish))
+    input('I hope you enjoyed your game :). Press enter to exit.')
 
 
 if __name__ == "__main__":
