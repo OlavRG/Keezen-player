@@ -1,106 +1,66 @@
-import pygame
 from network import ClientNetwork
 from keezen_bot import keezen_bot
 import client_view
-
-def open_display():
-    width = 500
-    height = 500
-    win = pygame.display.set_mode((width, height))
-    pygame.display.set_caption("Client")
+import board_state_logic
 
 
-class Player:
-    def __init__(self, x, y, width, height, color):
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self.color = color
-        self.rect = (x,y,width,height)
-        self.vel = 3
-
-    def draw(self, win):
-        pygame.draw.rect(win, self.color, self.rect)
-
-    def move(self):
-        keys = pygame.key.get_pressed()
-
-        if keys[pygame.K_LEFT]:
-            self.x -= self.vel
-
-        if keys[pygame.K_RIGHT]:
-            self.x += self.vel
-
-        if keys[pygame.K_UP]:
-            self.y -= self.vel
-
-        if keys[pygame.K_DOWN]:
-            self.y += self.vel
-
-        self.update()
-
-    def update(self):
-        self.rect = (self.x, self.y, self.width, self.height)
-
-
-def read_pos(str):
-    str = str.split(",")
-    return int(str[0]), int(str[1])
-
-
-def make_pos(tup):
-    return str(tup[0]) + "," + str(tup[1])
-
-
-def redrawWindow(win,player, player2):
-    win.fill((255,255,255))
-    player.draw(win)
-    player2.draw(win)
-    pygame.display.update()
-
-
-def main(server_IP):
-    n = ClientNetwork(server_IP)
+def main():
+    server_ip = client_view.get_server_ip()
+    socket_to_server = ClientNetwork(server_ip)
     all_pawns_of_current_player_are_in_finish = False
     player_is_human = client_view.is_player_human()
-    n.connect()
+    socket_to_server.connect()
     while not all_pawns_of_current_player_are_in_finish:
-        board_state = n.receive()
-        if not player_is_human:
-            card_play = keezen_bot(board_state)
-        else:
-            card_play = client_view.pick_card_play(board_state)
-        n.send(card_play)
-        all_pawns_of_current_player_are_in_finish = n.receive()
+        message = socket_to_server.receive()
+        match message["header"]:
+            case 'view_board_state':
+                board_state = message["content"]
+                # Parse board state, return pawn objects, hand object, player object
+                [player, current_player_color, other_pawns, discard_pile, game_info] = (
+                    board_state_logic.create_game_objects_from_board_state(board_state))
 
-    bla = 1
+                client_view.print_player_view(player, current_player_color, other_pawns, game_info)
 
+            case 'play_from_board_state':
+                board_state = message["content"]
+                # Parse board state, return pawn objects, hand object, player object
+                [player, current_player_color, other_pawns, discard_pile, game_info] = (
+                    board_state_logic.create_game_objects_from_board_state(board_state))
+                if not player_is_human:
+                    card_play = keezen_bot(board_state)
+                else:
+                    card_play = client_view.pick_card_play(player, other_pawns, game_info)
+                socket_to_server.send(card_play)
 
-"""            
-    run = True
-    n = Network()
-    startPos = n.getPos()
-    p = Player(startPos[0],startPos[1],100,100,(0,255,0))
-    p2 = Player(0,0,100,100,(255,0,0))
-    clock = pygame.time.Clock()
+            case 'client_card_play_dict':
+                client_card_play_dict = message["content"]
+                if not client_card_play_dict:
+                    print('Player does not want to play a card')
+                elif not client_card_play_dict['secondary_pawn_color']:
+                    print(f'Player wants to play {client_card_play_dict["card"]} '
+                          f'on {client_card_play_dict["primary_pawn_color"]} '
+                          f'at {client_card_play_dict["primary_pawn_position"]}')
+                elif client_card_play_dict['secondary_pawn_color'] and client_card_play_dict['primary_move']:
+                    print(f'Player wants to play {client_card_play_dict["card"]} '
+                          f'on {client_card_play_dict["primary_pawn_color"]} '
+                          f'at {client_card_play_dict["primary_pawn_position"]} '
+                          f'for {client_card_play_dict["primary_move"]} steps, '
+                          f'and on {client_card_play_dict["secondary_pawn_color"]} '
+                          f'at {client_card_play_dict["secondary_pawn_position"]} for the remainder')
+                elif client_card_play_dict['secondary_pawn_color'] and not client_card_play_dict['primary_move']:
+                    print(f'Player wants to play {client_card_play_dict["card"]} '
+                          f'on {client_card_play_dict["primary_pawn_color"]} '
+                          f'at {client_card_play_dict["primary_pawn_position"]} '
+                          f'and on {client_card_play_dict["secondary_pawn_color"]} '
+                          f'at {client_card_play_dict["secondary_pawn_position"]}')
+                else:
+                    print('Unexpected card play received')
+            case 'all_pawns_of_current_player_are_in_finish':
+                all_pawns_of_current_player_are_in_finish = message["content"]
+                print('Did the current player win? ' + str(all_pawns_of_current_player_are_in_finish))
+    input('I hope you enjoyed your game :). Press enter to exit.')
 
-    while run:
-        clock.tick(60)
-        p2Pos = n.send((p.x, p.y))
-        p2.x = p2Pos[0]
-        p2.y = p2Pos[1]
-        p2.update()
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-                pygame.quit()
-
-        p.move()
-        redrawWindow(win, p, p2)
-"""
 
 if __name__ == "__main__":
-    server_IP = input("What is the server IP?")
-    main(server_IP)
+    main()
+
