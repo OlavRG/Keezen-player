@@ -48,7 +48,7 @@ def create_game_objects_from_board_state(board_state):
     return player, current_player_color, other_pawns, discard_pile, game_info
 
 
-def set_pawns_to_current_player_PoV(players, current_player, game_info):
+def set_pawns_to_current_player_point_of_view(players, current_player, game_info):
     other_pawns = []
     list(map(other_pawns.extend, [player.pawns for player in players if player != current_player]))
     for pawn in current_player.pawns + other_pawns:

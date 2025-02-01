@@ -114,8 +114,9 @@ def pick_a_pawn(player, other_pawns, game_info, my_pawn):
     other_pawns_on_board = [pawn for pawn in other_pawns if not pawn.finish and not pawn.home]
     all_pawns_on_board = my_pawns_on_board + other_pawns_on_board
     positions_of_all_pawns_on_board = [pawn.position for pawn in all_pawns_on_board]
-    while type(my_pawn) is not Pawn:
-        pawn_choice = input(f"Pick a pawn by position (0-{game_info.board_size + 3}), at home (H), "
+    pawn_is_picked = False
+    while not pawn_is_picked:
+        pawn_choice = input(f"Pick a pawn by position (0-{game_info.board_size + 3}), at home (H), none (N) "
                             f"or a different card (-1):")
         try:
             pawn_choice = int(pawn_choice)
@@ -123,14 +124,19 @@ def pick_a_pawn(player, other_pawns, game_info, my_pawn):
             if pawn_choice.casefold() == 'h':
                 try:
                     my_pawn = [pawn for pawn in player.pawns if pawn.home][0]
+                    pawn_is_picked = True
                 except IndexError:
                     print("There are no pawns in your home base")
+            elif pawn_choice.casefold() == 'n':
+                my_pawn = None
+                pawn_is_picked = True
             else:
-                print("Type an int or 'H' please")
+                print("Type an int, 'H', or 'N please")
         else:
             if pawn_choice in positions_of_all_pawns_on_board:
                 my_pawn_index = positions_of_all_pawns_on_board.index(pawn_choice)
                 my_pawn = all_pawns_on_board[my_pawn_index]
+                pawn_is_picked = True
             elif pawn_choice == -1:
                 retort = random.randint(1, 2)
                 if retort == 1:
@@ -170,62 +176,8 @@ def pick_card_play(player, other_pawns, game_info):
             print(f"\"{card_choice}\" is not in " + ''.join(card.rank for card in player.hand))
 
     my_pawn = pick_a_pawn(player, other_pawns, game_info, my_pawn)
-    """
-    my_pawns_on_board = [pawn for pawn in player.pawns if not pawn.home]
-    other_pawns_on_board = [pawn for pawn in other_pawns if not pawn.finish and not pawn.home]
-    all_pawns_on_board = my_pawns_on_board + other_pawns_on_board
-    positions_of_all_pawns_on_board = [pawn.position for pawn in all_pawns_on_board]
-    while type(my_pawn) is not Pawn:
-        pawn_choice = input(f"Pick a pawn by position (0-{game_info.board_size + 3}), at home (H), "
-                            f"or a different card (-1):")
-        try:
-            pawn_choice = int(pawn_choice)
-        except ValueError:
-            if pawn_choice.casefold() == 'h':
-                try:
-                    my_pawn = [pawn for pawn in player.pawns if pawn.home][0]
-                except IndexError:
-                    print("There are no pawns in your home base")
-            else:
-                print("Type an int or 'H' please")
-        else:
-            if pawn_choice in positions_of_all_pawns_on_board:
-                my_pawn_index = positions_of_all_pawns_on_board.index(pawn_choice)
-                my_pawn = all_pawns_on_board[my_pawn_index]
-            elif pawn_choice == -1:
-                retort = random.randint(1, 2)
-                if retort == 1:
-                    print("Tafel plakt!")
-                elif retort == 2:
-                    print("No take backsies!")
-            else:
-                print(f"There is no pawn at {pawn_choice}")
-    """
-
-    if card.is_splittable or card.rank == "J":
+    if card.rank == "J" or card.is_splittable:
         target_pawn = pick_a_pawn(player, other_pawns, game_info, target_pawn)
-        """
-        while type(target_pawn) is not Pawn:
-            target_pawn_choice = input("Pick a second pawn by #, or '0' for no second pawn:")
-            try:
-                target_pawn_choice = int(target_pawn_choice)
-            except ValueError:
-                print(f"{target_pawn_choice} is not int.")
-            else:
-                if target_pawn_choice in range(1, len(player.pawns + other_pawns) + 1):
-                    # Note that the pawn order here must match the pawn order in print_player_view
-                    target_pawn = ([pawn for pawn in player.pawns + other_pawns if
-                                    not pawn.home and pawn.color == player.color or
-                                    not pawn.home and pawn.color != player.color and not pawn.finish] +
-                                   [pawn for pawn in player.pawns + other_pawns if pawn.home] +
-                                   [pawn for pawn in player.pawns + other_pawns if
-                                    pawn.color != player.color and pawn.finish])[target_pawn_choice - 1]
-                elif target_pawn_choice == 0:
-                    target_pawn = None
-                    break
-                else:
-                    print(f"Pick a pawn between 1 and {len(player.pawns + other_pawns)}")
-        """
     else:
         target_pawn = None
     if card.is_splittable and target_pawn:

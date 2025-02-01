@@ -26,7 +26,7 @@ def create_card_play(card, my_pawn, target_pawn=None, move_value=None, card_play
 
 
 def do_card_play_and_resolve_outcome(card_play, player, other_pawns,
-                                     game_info, card_plays_on_pawns_and_outcomes) -> object:
+                                     game_info, card_plays_on_pawns_and_outcomes):
     my_other_pawns = [pawn for pawn in player.pawns if pawn != card_play["primary_pawn"]]
     position_1 = card_play["primary_pawn"].position
     if card_play["primary_move"]:

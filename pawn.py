@@ -32,7 +32,7 @@ class Pawn:
         self.finish_at_start_of_turn = False
         self.is_protected = False
 
-    def check_for_finish(self, board_size):
+    def _check_for_finish(self, board_size):
         if self.position >= board_size:
             if self.finish:
                 self.finish_at_start_of_turn = True
@@ -46,7 +46,7 @@ class Pawn:
         else:
             pass
 
-    def check_for_negative_position(self, board_size):
+    def _check_for_negative_position(self, board_size):
         if self.position < 0 or self.position_from_own_start < 0:
             self.position = (self.position + board_size) % board_size
             self.position_from_own_start = (self.position_from_own_start + board_size) % board_size
@@ -54,33 +54,27 @@ class Pawn:
         else:
             pass
 
-    def check_for_protection_from_own_0(self):
+    def _check_for_protection_from_own_0(self):
         if self.position_from_own_start == 0:
             self.is_protected = True
         else:
             pass
 
-    def set_position_from_own_start_after_jack(self, board_size):
+    def _set_position_from_own_start_after_jack(self, board_size):
         relative_move = self.position_at_start_of_turn - self.position
         self.position_from_own_start = self.position_from_own_start - relative_move
         # Following line is necessary to properly set your opponents pawn position_from_own_start. If the pawn moves
         # over its own start (and thus above board size), the position needs to be reset.
         self.position_from_own_start = (self.position_from_own_start + board_size) % board_size
 
-    # this function does not work. Position after a King is not 0 if pawn.color != player.color.
-    # If fixed you could play ace and king cards on pawns of others
-    def set_position_after_ace_or_king_or_tackle(self):
-        relative_move = self.position_from_own_start_at_start_of_turn - self.position_from_own_start
-        self.position = self.position - relative_move
-
-    def move(self, move_value, board_size):
+    def _update_pawn_positions_by_move_value(self, move_value, board_size):
         self.position_at_start_of_turn = self.position
         self.position_from_own_start_at_start_of_turn = self.position_from_own_start
         self.position += move_value
         self.position_from_own_start += move_value
-        self.check_for_finish(board_size)
-        self.check_for_negative_position(board_size)
-        self.check_for_protection_from_own_0()
+        self._check_for_finish(board_size)
+        self._check_for_negative_position(board_size)
+        self._check_for_protection_from_own_0()
 
     def move_by_card(self, card, game_info, jack_other_pawn_position=None, move_from_7=None):
         if card.rank == 'A':
@@ -91,26 +85,26 @@ class Pawn:
                 self.position_from_own_start = 0
                 self.position_at_start_of_turn = self.position
                 self.position = 0
-                self.check_for_finish(game_info.board_size)
-                self.check_for_negative_position(game_info.board_size)
-                self.check_for_protection_from_own_0()
+                self._check_for_finish(game_info.board_size)
+                self._check_for_negative_position(game_info.board_size)
+                self._check_for_protection_from_own_0()
             else:
                 move_value = 1
-                self.move(move_value, game_info.board_size)
+                self._update_pawn_positions_by_move_value(move_value, game_info.board_size)
         elif card.is_splittable:
             if move_from_7:
                 move_value = move_from_7
             else:
                 move_value = card.move_value
-            self.move(move_value, game_info.board_size)
+            self._update_pawn_positions_by_move_value(move_value, game_info.board_size)
         elif card.rank == 'J':
             self.position_at_start_of_turn = self.position
             self.position_from_own_start_at_start_of_turn = self.position_from_own_start
             self.position = jack_other_pawn_position
-            self.set_position_from_own_start_after_jack(game_info.board_size)
-            self.check_for_finish(game_info.board_size)
-            self.check_for_negative_position(game_info.board_size)
-            self.check_for_protection_from_own_0()
+            self._set_position_from_own_start_after_jack(game_info.board_size)
+            self._check_for_finish(game_info.board_size)
+            self._check_for_negative_position(game_info.board_size)
+            self._check_for_protection_from_own_0()
         elif card.rank == 'K':
             if self.home:
                 self.home_at_start_of_turn = self.home
@@ -119,15 +113,15 @@ class Pawn:
                 self.position_from_own_start = 0
                 self.position_at_start_of_turn = self.position
                 self.position = 0
-                self.check_for_finish(game_info.board_size)
-                self.check_for_negative_position(game_info.board_size)
-                self.check_for_protection_from_own_0()
+                self._check_for_finish(game_info.board_size)
+                self._check_for_negative_position(game_info.board_size)
+                self._check_for_protection_from_own_0()
             else:
                 # This play would change nothing and is hence indetectable by is_card_play_legal. To detect the illegal
                 # play, we set to None
                 self.home_at_start_of_turn = None
         else:
-            self.move(card.move_value, game_info.board_size)
+            self._update_pawn_positions_by_move_value(card.move_value, game_info.board_size)
 
     def set_position_relative_to_current_player(self, current_player, game_info):
         if self.color != current_player.color:

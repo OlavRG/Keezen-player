@@ -5,7 +5,7 @@ import network
 import server_logging
 from board_state_logic import create_starting_game_objects
 from board_state_logic import create_board_states_per_client
-from board_state_logic import set_pawns_to_current_player_PoV
+from board_state_logic import set_pawns_to_current_player_point_of_view
 from board_state_logic import deal_cards_from_deck_to_players
 from card_play_logic import test_all_possible_plays
 from card_play_logic import card_play_to_dict
@@ -63,7 +63,7 @@ if __name__ == "__main__":
                     logger.info(client_card_play_dict)
 
                     # Define other_pawns and set pawn.position to the position from the current players POV
-                    other_pawns = set_pawns_to_current_player_PoV(players, players[client], game_info)
+                    other_pawns = set_pawns_to_current_player_point_of_view(players, players[client], game_info)
                     current_player_color = players[client].color
 
                     print_player_view(players[client], current_player_color, other_pawns, game_info)
