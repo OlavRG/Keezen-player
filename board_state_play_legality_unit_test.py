@@ -1,7 +1,35 @@
-# Several board states are given to test if the legality check works correctly.
-# For each given board state the card play on the first pawn of my_color is the check.
-# This should be used in combination with is_card_play_legal_unit_test. That function reads the card history to see
-# how many legal moves should be possible, where A=1 and Q=0.
+# This file provides the input for is_card_play_legal_unit_test.
+# Each board state should be accompanied by a card play and if it is expected to be legal.
+
+# TO DO:
+# - add card play dicts and expected legality. Assemble in some logical format (dict?)
+# - Maybe rename this file and change to filetype (.json maybe?)
+
+
+# test if you can hit your own pawn that started turn at home. Should be legal. It is easy for a legality checker
+# to say that any pawn that starts its turn at home cannot be tackled the same turn.
+board_state_tackle_own_pawn_that_started_at_home = {"pawns": [
+     {"color":"red","position":0,"home":False,"finish":False},
+     {"color":"red","position":1,"home":False,"finish":False}],
+    "hand": '7',
+    "other_hands": [5, 5, 5],
+    "my_color": "Red",
+    "card_history": ""
+    }
+
+card_play_dict = {"card": "7",
+                  "primary_pawn_color": "red",
+                  "primary_pawn_position": 0,
+                  "primary_pawn_home": False,
+                  "primary_pawn_finish": False,
+                  "secondary_pawn_color": "red",
+                  "secondary_pawn_position": 1,
+                  "secondary_pawn_home": False,
+                  "secondary_pawn_finish": False,
+                  "primary_move": 4}
+
+is_legal_expected = True
+
 
 # test not to exceed board size. 
 board_state_move_past_board_size = {"pawns": [
@@ -192,6 +220,7 @@ board_state_move_with_Jack_with_legal_target_pawn_while_protected_pawns_are_on_b
     "card_history": "A"
     }
 
+
 """"
 board_state = {"pawns": [
      {"color":"Blue","position":0,"home":True,"finish":False},
@@ -215,5 +244,16 @@ board_state = {"pawns": [
     "my_color": "Orange",
     "card_history": ""
     }
+
+    card_play_dict = {"card": card_play["card"].rank,
+                      "primary_pawn_color": card_play["primary_pawn"].color,
+                      "primary_pawn_position": card_play["primary_pawn"].position_from_own_start,
+                      "primary_pawn_home": card_play["primary_pawn"].home,
+                      "primary_pawn_finish": card_play["primary_pawn"].finish,
+                      "secondary_pawn_color": secondary_pawn_color,
+                      "secondary_pawn_position": secondary_pawn_position_from_own_start,
+                      "secondary_pawn_home": secondary_pawn_home,
+                      "secondary_pawn_finish": secondary_pawn_finish,
+                      "primary_move": card_play["primary_move"]}
 """
 

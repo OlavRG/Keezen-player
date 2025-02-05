@@ -7,15 +7,15 @@ Created on Sun Jul 24 11:22:10 2022
 
 from board_state_logic import create_game_objects_from_board_state
 from card_play_logic import test_all_possible_plays
-from card_play_logic import test_all_possible_follow_up_plays
-from card_play_logic import pick_play_with_highest_eventual_board_value
 from card_play_logic import card_play_to_dict
+from keezen_bot_logic import test_all_possible_follow_up_plays  # Keezen bot only
+from keezen_bot_logic import pick_play_with_highest_eventual_board_value  # Keezen bot only
 from card import Card
-import board_state_niche_tester
 
 
 def keezen_bot(board_state):
-    # This is the main executable that imports all classes to run a game
+    # This function simulates a player. Its input is the current state of the game (board_state), and its output is
+    # a card play
 
     # Parse board state, return pawn objects, hand object, player object
     # board_state = board_state_niche_tester.board_state_blocked

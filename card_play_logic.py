@@ -1,6 +1,8 @@
 # FUNCTION
-# This script contains all functions for resolving a card_play and the testing of card_plays. A card_play is defined as
-# all information describing a players intended action in a turn, and optionally the legality and resulting board_value.
+# This script contains all functions for creating and resolving card_plays. It also contains the testing of all
+# card_plays in a single turn. A card_play is defined as all information describing a players intended action in a turn,
+# and optionally the legality and resulting board_value. Functions looking at card_plays of consecutive turns are
+# captured in keezen_bot_logic.py.
 
 from is_card_play_legal import is_card_play_legal
 import copy
@@ -91,7 +93,7 @@ def reset_pawns_to_previous_state(backup_pawns, pawns):
         pawns[pawn_number].__dict__.update(backup_pawns[pawn_number].__dict__)
 
 
-# test the outcome of a play without playing it (like playing it in your mind)
+# test the outcomes of all plays without playing them (like playing it in your mind)
 def test_all_possible_plays(player, other_pawns, discard_pile, game_info):
     my_backup_pawns = copy.deepcopy(player.pawns)
     other_backup_pawns = copy.deepcopy(other_pawns)
@@ -134,79 +136,6 @@ def test_all_possible_plays(player, other_pawns, discard_pile, game_info):
     return card_plays_on_pawns_and_outcomes
 
 
-def test_next_round_card_plays(player, other_pawns, discard_pile, game_info, card_play):
-    next_round_hand = []
-    all_unique_cards = 'A23456789XJQK'
-    for card in all_unique_cards:
-        next_round_hand.append(Card(card))
-    backup_hand = player.hand[:]
-    player.hand = next_round_hand
-    next_round_plays = test_all_possible_plays(player, other_pawns, discard_pile, game_info)
-    player.hand = backup_hand[:]
-    card_plays_up_to_next_round = []
-    for next_round_play in next_round_plays:
-        old_and_new_play = card_play + next_round_play
-        card_plays_up_to_next_round.append(old_and_new_play)
-    return card_plays_up_to_next_round
-
-
-def test_all_possible_follow_up_plays(legal_card_plays, dead_end_plays, player, other_pawns, game_info, discard_pile):
-    all_card_plays = []
-    backup_player_card_history = player.card_history
-    my_backup_pawns = copy.deepcopy(player.pawns)
-    other_backup_pawns = copy.deepcopy(other_pawns)
-    backup_hand = player.hand[:]
-    backup_discard_pile = discard_pile[:]
-    for consecutive_card_plays in legal_card_plays:
-        for card_play in consecutive_card_plays:
-            do_card_play_and_resolve_outcome(card_play, player, other_pawns, game_info,
-                                             card_plays_on_pawns_and_outcomes=[])
-            # Discard card from hand
-            move_card_from_hand_to_discard_and_mark_in_player_card_history(player, card_play["card"], discard_pile)
-        new_card_plays_from_single_previous_play = test_all_possible_plays(player, other_pawns, discard_pile, game_info)
-        # if previous turn play has no follow up, check the value of its next round
-        legal_new_card_plays_from_single_previous_play = [new_card_play for new_card_play in
-                                                          new_card_plays_from_single_previous_play if
-                                                          new_card_play[0]["card_play_is_legal"]]
-        if not legal_new_card_plays_from_single_previous_play:
-            dead_end_plays_incl_illegal = test_next_round_card_plays(player, player.pawns, other_pawns, game_info, consecutive_card_plays)
-            dead_end_plays += [play for play in dead_end_plays_incl_illegal if play[-1]["card_play_is_legal"]]
-            # Putting the last pawn in finish leaves no legal new card plays. Hence we check separately for a winning move
-            if all([pawn.finish for pawn in player.pawns]):
-                dead_end_plays += [consecutive_card_plays]
-        else:
-            pass
-
-        # reset test pawns and hand for following loop
-        player.card_history = backup_player_card_history
-        reset_pawns_to_previous_state(my_backup_pawns, player.pawns)
-        player.hand = backup_hand[:]
-        reset_pawns_to_previous_state(other_backup_pawns, other_pawns)
-        discard_pile = backup_discard_pile[:]
-
-        # Append the previous play and new play in the same sublist
-        for new_turn_card_play in new_card_plays_from_single_previous_play:
-            old_and_new_play_from_single_previous_play = consecutive_card_plays + new_turn_card_play
-            all_card_plays.append(old_and_new_play_from_single_previous_play)
-
-    # filter all illegal plays
-    all_legal_card_plays = [card_play for card_play in all_card_plays if card_play[-1]["card_play_is_legal"]]
-
-    return all_legal_card_plays, dead_end_plays
-
-
-def pick_play_with_highest_eventual_board_value(all_plays):
-    highest_value = 0
-    best_play = None
-    for play in all_plays:
-        if play[-1]["board_value"] > highest_value:
-            highest_value = play[-1]["board_value"]
-            best_play = play
-        else:
-            pass
-    return best_play
-
-
 def card_play_to_dict(card_play):
     # check if there is any legal play
     if not card_play:
@@ -216,17 +145,24 @@ def card_play_to_dict(card_play):
         card_play = card_play[0]
     if card_play["secondary_pawn"]:
         secondary_pawn_color = card_play["secondary_pawn"].color
-        secondary_pawn_position = card_play["secondary_pawn"].position_from_own_start
+        secondary_pawn_position_from_own_start = card_play["secondary_pawn"].position_from_own_start
+        secondary_pawn_home = card_play["secondary_pawn"].home
+        secondary_pawn_finish = card_play["secondary_pawn"].finish
     else:
         secondary_pawn_color = None
-        secondary_pawn_position = None
+        secondary_pawn_position_from_own_start = None
+        secondary_pawn_home = None
+        secondary_pawn_finish = None
     # primary_pawn_home is needed to distinguish between pawns at position 0 on the board and at home
     card_play_dict = {"card": card_play["card"].rank,
                       "primary_pawn_color": card_play["primary_pawn"].color,
                       "primary_pawn_position": card_play["primary_pawn"].position_from_own_start,
                       "primary_pawn_home": card_play["primary_pawn"].home,
+                      "primary_pawn_finish": card_play["primary_pawn"].finish,
                       "secondary_pawn_color": secondary_pawn_color,
-                      "secondary_pawn_position": secondary_pawn_position,
+                      "secondary_pawn_position": secondary_pawn_position_from_own_start,
+                      "secondary_pawn_home": secondary_pawn_home,
+                      "secondary_pawn_finish": secondary_pawn_finish,
                       "primary_move": card_play["primary_move"]}
     return card_play_dict
 
