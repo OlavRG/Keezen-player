@@ -16,14 +16,14 @@ from card_play_logic import move_card_from_hand_to_discard_and_mark_in_player_ca
 from card_play_logic import reset_pawns_to_previous_state
 
 
-def test_next_round_card_plays(player, other_pawns, discard_pile, game_info, card_play):
+def test_next_round_card_plays(player, players, game_info, card_play):
     next_round_hand = []
     all_unique_cards = 'A23456789XJQK'
     for card in all_unique_cards:
         next_round_hand.append(Card(card))
     backup_hand = player.hand[:]
     player.hand = next_round_hand
-    next_round_plays = test_all_possible_plays(player, other_pawns, discard_pile, game_info)
+    next_round_plays = test_all_possible_plays(player, players, game_info)
     player.hand = backup_hand[:]
     card_plays_up_to_next_round = []
     for next_round_play in next_round_plays:
@@ -32,26 +32,26 @@ def test_next_round_card_plays(player, other_pawns, discard_pile, game_info, car
     return card_plays_up_to_next_round
 
 
-def test_all_possible_follow_up_plays(legal_card_plays, dead_end_plays, player, other_pawns, game_info, discard_pile):
+def test_all_possible_follow_up_plays(legal_card_plays, dead_end_plays, player, players, game_info, discard_pile):
     all_card_plays = []
     backup_player_card_history = player.card_history
     my_backup_pawns = copy.deepcopy(player.pawns)
-    other_backup_pawns = copy.deepcopy(other_pawns)
+    other_backup_pawns = copy.deepcopy(players.other_pawns(player))
     backup_hand = player.hand[:]
     backup_discard_pile = discard_pile[:]
     for consecutive_card_plays in legal_card_plays:
         for card_play in consecutive_card_plays:
-            do_card_play_and_resolve_outcome(card_play, player, other_pawns, game_info,
+            do_card_play_and_resolve_outcome(card_play, player, players, game_info,
                                              card_plays_on_pawns_and_outcomes=[])
             # Discard card from hand
             move_card_from_hand_to_discard_and_mark_in_player_card_history(player, card_play["card"], discard_pile)
-        new_card_plays_from_single_previous_play = test_all_possible_plays(player, other_pawns, discard_pile, game_info)
+        new_card_plays_from_single_previous_play = test_all_possible_plays(player, players, game_info)
         # if previous turn play has no follow up, check the value of its next round
         legal_new_card_plays_from_single_previous_play = [new_card_play for new_card_play in
                                                           new_card_plays_from_single_previous_play if
                                                           new_card_play[0]["card_play_is_legal"]]
         if not legal_new_card_plays_from_single_previous_play:
-            dead_end_plays_incl_illegal = test_next_round_card_plays(player, player.pawns, other_pawns, game_info, consecutive_card_plays)
+            dead_end_plays_incl_illegal = test_next_round_card_plays(player, players, game_info, consecutive_card_plays)
             dead_end_plays += [play for play in dead_end_plays_incl_illegal if play[-1]["card_play_is_legal"]]
             # Putting the last pawn in finish leaves no legal new card plays. Hence we check separately for a winning move
             if all([pawn.finish for pawn in player.pawns]):
@@ -63,7 +63,7 @@ def test_all_possible_follow_up_plays(legal_card_plays, dead_end_plays, player, 
         player.card_history = backup_player_card_history
         reset_pawns_to_previous_state(my_backup_pawns, player.pawns)
         player.hand = backup_hand[:]
-        reset_pawns_to_previous_state(other_backup_pawns, other_pawns)
+        reset_pawns_to_previous_state(other_backup_pawns, players.other_pawns(player))
         discard_pile = backup_discard_pile[:]
 
         # Append the previous play and new play in the same sublist

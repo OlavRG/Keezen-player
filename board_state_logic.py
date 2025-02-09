@@ -6,6 +6,7 @@
 #   clients, and to convert game objects to this board_state and vice versa.
 
 from player import Player
+from player import Players
 from card import Card
 from pawn import Pawn
 from game_info import GameInfo
@@ -13,53 +14,77 @@ import random
 
 
 def create_game_objects_from_board_state(board_state):
-    player = Player(board_state["my_color"])
-    current_player_color = board_state["current_player_color"]
-    for card in board_state["hand"]:
-        player.hand.append(Card(card))
-    # get unique colors with same order as board_state. This determines player order!
+    # Create game_info. Get unique colors with same order as board_state. This determines player order!
     player_colors = []
     for pawn in board_state["pawns"]:
         if pawn["color"] not in player_colors:
             player_colors.append(pawn["color"])
-    player.card_history = ''.join(player_history["card_history"] for player_history in board_state["card_history"] if
-                                  player_history["color"] == player.color)
     game_info = GameInfo(player_colors)
+
+    # Create discard pile
     discard_pile_card_string = ''.join(player_history["card_history"] for player_history in board_state["card_history"])
     discard_pile = [Card(card) for card in discard_pile_card_string]
-    other_pawns = []
+
+    # Create all players
+    players = Players()
+    for player_n in range(0, game_info.player_count):
+        players.append(Player(game_info.player_colors[player_n]))
+        players[player_n].card_history = ''.join(
+            player_history["card_history"] for player_history in board_state["card_history"]
+            if player_history["color"] == players[player_n].color)
+
+    # Identify current player
+    current_player = next((player for player in players if player.color == board_state["my_color"]), None)
+
+    # Add cards to current player hand
+    for card in board_state["hand"]:
+        current_player.hand.append(Card(card))
+
+    # Add pawns to players
     for pawn in board_state["pawns"]:
         if pawn["position"] == 0 or pawn["finish"]:
             is_protected = True
         else:
             is_protected = False
-        if pawn["color"] == player.color:
+        if pawn["color"] == current_player.color:
             if pawn["finish"] and pawn["position"] in range(0, 4):
                 pawn["position"] = pawn["position"] + game_info.board_size
-            player.pawns.append(Pawn(pawn["color"], pawn["position"], pawn["position"],
-                                pawn["home"], pawn["finish"], is_protected))
-        elif pawn["color"] != player.color:
-            pawn_turn_relative_to_player = ((player_colors.index(pawn["color"]) - player_colors.index(player.color)) %
-                                            len(player_colors))
+            current_player.pawns.append(Pawn(pawn["color"], pawn["position"], pawn["position"],
+                                             pawn["home"], pawn["finish"], is_protected))
+        elif pawn["color"] != current_player.color:
+            pawn_turn_relative_to_player = ((player_colors.index(pawn["color"]) -
+                                             player_colors.index(current_player.color)) % len(player_colors))
             position_relative_to_player_start = pawn["position"] + 16 * pawn_turn_relative_to_player
             position_relative_to_player_start = position_relative_to_player_start % game_info.board_size
-            other_pawns.append(Pawn(pawn["color"], position_relative_to_player_start, pawn["position"],
-                                    pawn["home"], pawn["finish"], is_protected))
-    return player, current_player_color, other_pawns, discard_pile, game_info
+            relevant_player = next((player for player in players if player.color == pawn["color"]), None)
+            relevant_player.pawns.append(Pawn(pawn["color"], position_relative_to_player_start, pawn["position"],
+                                              pawn["home"], pawn["finish"], is_protected))
+    return current_player, players, discard_pile, game_info
 
 
-def set_pawns_to_current_player_point_of_view(players, current_player, game_info):
-    other_pawns = []
-    list(map(other_pawns.extend, [player.pawns for player in players if player != current_player]))
-    for pawn in current_player.pawns + other_pawns:
-        pawn.set_position_relative_to_current_player(current_player, game_info)
-    return other_pawns
+def move_cards_from_discard_to_deck_and_shuffle(deck, discard_pile):
+    if len(deck) == 0 and len(discard_pile) != 0:
+        deck.extend(discard_pile[:])
+        random.shuffle(deck)
+        discard_pile[:] = []
+    else:
+        pass
 
 
-def deal_cards_from_deck_to_players(players, deck, cards_per_player):
+def deal_n_cards_from_deck_to_players(players, deck, cards_per_player):
     for player in range(len(players)):
         for card in range(cards_per_player):
             players[player].hand.append(deck.pop())
+
+
+def deal_cards_from_deck_to_players(players, deck, game_info):
+    if len(deck) == 13 * game_info.player_count:
+        deal_n_cards_from_deck_to_players(players, deck, 5)
+    elif len(deck) < (13 * game_info.player_count) and len(deck) % 4 == 0:
+        deal_n_cards_from_deck_to_players(players, deck, 4)
+    else:
+        raise Exception(f"Unexpected deck size. Deck is either greater than 13*players, or not dividable by 4."
+                        f"{len(deck)=}")
 
 
 def create_starting_game_objects(n_players):
@@ -71,14 +96,13 @@ def create_starting_game_objects(n_players):
     deck = list(map(Card, list(n_players * 'A23456789XJQK')))
     random.shuffle(deck)
     discard_pile = []
-    players = []
-    for player in range(0, n_players):
-        players.append(Player(colors[player]))
-        players[player].pawns.append(Pawn(colors[player], 0, 0, home=True, finish=False, protected=True))
-        players[player].pawns.append(Pawn(colors[player], 0, 0, home=True, finish=False, protected=True))
-        players[player].pawns.append(Pawn(colors[player], 0, 0, home=True, finish=False, protected=True))
-        players[player].pawns.append(Pawn(colors[player], 0, 0, home=True, finish=False, protected=True))
-
+    players = Players()
+    for player_n in range(0, n_players):
+        players.append(Player(colors[player_n]))
+        players[player_n].pawns.append(Pawn(colors[player_n], 0, 0, home=True, finish=False, protected=True))
+        players[player_n].pawns.append(Pawn(colors[player_n], 0, 0, home=True, finish=False, protected=True))
+        players[player_n].pawns.append(Pawn(colors[player_n], 0, 0, home=True, finish=False, protected=True))
+        players[player_n].pawns.append(Pawn(colors[player_n], 0, 0, home=True, finish=False, protected=True))
     return players, deck, discard_pile, game_info
 
 
@@ -107,22 +131,22 @@ def create_board_states_per_client(players, deck, game_info):
 
 
 board_state_start = {"pawns": [
-     {"color":"Blue","position":0,"home":True,"finish":False},
-     {"color":"Blue","position":1,"home":True,"finish":False},
-     {"color":"Blue","position":2,"home":True,"finish":False},
-     {"color":"Blue","position":3,"home":True,"finish":False},
-     {"color":"Orange","position":0,"home":True,"finish":False},
-     {"color":"Orange","position":1,"home":True,"finish":False},
-     {"color":"Orange","position":2,"home":True,"finish":False},
-     {"color":"Orange","position":3,"home":True,"finish":False},
-     {"color":"Red","position":0,"home":True,"finish":False},
-     {"color":"Red","position":1,"home":True,"finish":False},
-     {"color":"Red","position":2,"home":True,"finish":False},
-     {"color":"Red","position":3,"home":True,"finish":False},
-     {"color":"White","position":0,"home":True,"finish":False},
-     {"color":"White","position":1,"home":True,"finish":False},
-     {"color":"White","position":2,"home":True,"finish":False},
-     {"color":"White","position":3,"home":True,"finish":False}],
+    {"color": "Blue", "position": 0, "home": True, "finish": False},
+    {"color": "Blue", "position": 1, "home": True, "finish": False},
+    {"color": "Blue", "position": 2, "home": True, "finish": False},
+    {"color": "Blue", "position": 3, "home": True, "finish": False},
+    {"color": "Orange", "position": 0, "home": True, "finish": False},
+    {"color": "Orange", "position": 1, "home": True, "finish": False},
+    {"color": "Orange", "position": 2, "home": True, "finish": False},
+    {"color": "Orange", "position": 3, "home": True, "finish": False},
+    {"color": "Red", "position": 0, "home": True, "finish": False},
+    {"color": "Red", "position": 1, "home": True, "finish": False},
+    {"color": "Red", "position": 2, "home": True, "finish": False},
+    {"color": "Red", "position": 3, "home": True, "finish": False},
+    {"color": "White", "position": 0, "home": True, "finish": False},
+    {"color": "White", "position": 1, "home": True, "finish": False},
+    {"color": "White", "position": 2, "home": True, "finish": False},
+    {"color": "White", "position": 3, "home": True, "finish": False}],
     "hand": 'A47JQ',
     "other_hands": [5, 5, 5],
     "my_color": "Orange",
@@ -131,8 +155,7 @@ board_state_start = {"pawns": [
         {"color": "Orange", "card_history": '483JX'},
         {"color": "Red", "card_history": '483JX'},
         {"color": "White", "card_history": '483JX'}]
-    }
-
+}
 
 """
 def create_starting_board_state(n_players):

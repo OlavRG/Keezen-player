@@ -4,8 +4,8 @@ import random
 import network
 import server_logging
 from board_state_logic import create_starting_game_objects
+from board_state_logic import move_cards_from_discard_to_deck_and_shuffle
 from board_state_logic import create_board_states_per_client
-from board_state_logic import set_pawns_to_current_player_point_of_view
 from board_state_logic import deal_cards_from_deck_to_players
 from card_play_logic import test_all_possible_plays
 from card_play_logic import card_play_to_dict
@@ -18,35 +18,20 @@ if __name__ == "__main__":
 
     # start up code
     logger = server_logging.create_logger()
-    n_clients = int(input("How many players are joining? Please state a number <9"))  # limit by create_starting_game_ob
+    n_clients = int(input("How many players are joining? Please state a number <=8: "))  # limit by create_starting_game_ob
     initial_socket = network.ServerNetwork()
     sockets_to_clients = initial_socket.establish_connections(n_clients)
     players, deck, discard_pile, game_info = create_starting_game_objects(n_clients)
     all_pawns_of_current_player_are_in_finish = False
 
-    hands = []
-    for player in players:
-        hands.append(player.hand)
-
     while not all_pawns_of_current_player_are_in_finish:
         # reset the deck when all cards are in the discard pile
-        if len(deck) == 0 and len(discard_pile) != 0:
-            deck.extend(discard_pile[:])
-            random.shuffle(deck)
-            discard_pile[:] = []
-        else:
-            pass
+        move_cards_from_discard_to_deck_and_shuffle(deck, discard_pile)
         while deck:
-            if len(deck) == 13 * game_info.player_count:
-                deal_cards_from_deck_to_players(players, deck, 5)
-            elif len(deck) < (13 * game_info.player_count) and len(deck) % 4 == 0:
-                deal_cards_from_deck_to_players(players, deck, 4)
-            else:
-                raise Exception(f"Unexpected deck size. Deck is either greater than 13*players, or not dividable by 4."
-                                f"{len(deck)=}")
+            deal_cards_from_deck_to_players(players, deck, game_info)
             board_states = create_board_states_per_client(players, deck, game_info)
 
-            while any(hands):
+            while any([player.hand for player in players]):
                 # turns for each client
                 for client in range(n_clients):
                     # Update current player in board state
@@ -55,7 +40,7 @@ if __name__ == "__main__":
 
                     # Send board state and cards in hand to all players at start of each turn
                     sockets_to_clients.send_personal_message_to_each_client('view_board_state',
-                                                                 board_states)
+                                                                            board_states)
                     # Ask current player to make a move
                     sockets_to_clients.send_to_a_client(client, {"header": 'play_from_board_state',
                                                                  "content": board_states[client]})
@@ -63,17 +48,17 @@ if __name__ == "__main__":
                     logger.info(client_card_play_dict)
 
                     # Define other_pawns and set pawn.position to the position from the current players POV
-                    other_pawns = set_pawns_to_current_player_point_of_view(players, players[client], game_info)
+                    players.set_pawns_to_current_player_point_of_view(players[client], game_info)
                     current_player_color = players[client].color
 
-                    print_player_view(players[client], current_player_color, other_pawns, game_info)
+                    print_player_view(players[client], players, game_info)
 
                     print('client card play: ', client_card_play_dict)
                     sockets_to_clients.send_same_message_to_each_client(
                         'client_card_play_dict', client_card_play_dict)
 
                     # Make a list of all possible plays and check if the clients move is in it
-                    all_card_plays = test_all_possible_plays(players[client], other_pawns, discard_pile, game_info)
+                    all_card_plays = test_all_possible_plays(players[client], players, game_info)
                     legal_card_plays = [card_play for card_play in all_card_plays if card_play[-1]["card_play_is_legal"]]
                     legal_card_play_dicts = list(map(card_play_to_dict, legal_card_plays))
                     if not legal_card_play_dicts:
@@ -92,7 +77,7 @@ if __name__ == "__main__":
                         worst_card_play = legal_card_plays[worst_card_play_index][0]
                         print('Provided card play is illegal. Worst card play was played instead.')
                         print('Substituted card play: ', card_play_to_dict([worst_card_play]))
-                        do_card_play_and_resolve_outcome(worst_card_play, players[client], other_pawns, game_info,
+                        do_card_play_and_resolve_outcome(worst_card_play, players[client], players, game_info,
                                                          card_plays_on_pawns_and_outcomes=[])
                         # Discard card from hand
                         move_card_from_hand_to_discard_and_mark_in_player_card_history(players[client],
@@ -104,7 +89,7 @@ if __name__ == "__main__":
                         # resolve client_card_play
                         client_card_play_index = legal_card_play_dicts.index(client_card_play_dict)
                         client_card_play = legal_card_plays[client_card_play_index][0]
-                        do_card_play_and_resolve_outcome(client_card_play, players[client], other_pawns, game_info,
+                        do_card_play_and_resolve_outcome(client_card_play, players[client], players, game_info,
                                                          card_plays_on_pawns_and_outcomes=[])
                         # Discard card from hand
                         move_card_from_hand_to_discard_and_mark_in_player_card_history(players[client],

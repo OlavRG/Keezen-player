@@ -25,7 +25,7 @@ for board_state_tuple in board_states_to_test:
     print(board_state_tuple[0])
     board_state = board_state_tuple[1]
     [player, current_player_color, other_pawns, discard_pile, game_info] = create_game_objects_from_board_state(board_state)
-    turn_1_plays = test_all_possible_plays(player, other_pawns, discard_pile, game_info)
+    turn_1_plays = test_all_possible_plays(player, other_pawns, game_info)
     turn_1_legal_plays = [card_play for card_play in turn_1_plays if card_play[-1]["card_play_is_legal"]]
 
     # Use card history in board_state_play_legality_unit_test to write down the actual legal plays

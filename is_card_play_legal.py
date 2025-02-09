@@ -30,7 +30,7 @@ def spawn_at_occupied_base(my_pawn, my_other_pawns):
     legal = True
     if my_pawn.position == 0 and not my_pawn.home and my_other_pawns:
         for my_other_pawn in my_other_pawns:
-            if my_other_pawn.position == 0 and not my_other_pawn.home:
+            if my_other_pawn.position == 0 and not my_other_pawn.home and not my_other_pawn.finish:
                 legal = False
                 return legal
             else:

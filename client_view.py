@@ -1,12 +1,8 @@
 from card_play_logic import card_play_to_dict
 from card_play_logic import create_card_play
-from board_state_logic import create_game_objects_from_board_state
 from card import Card
-from pawn import Pawn
-from game_info import GameInfo
 import random
 import socket
-#from rich import print
 
 
 def get_server_ip():
@@ -61,15 +57,14 @@ def does_player_want_to_play():
     return player_wants_to_play
 
 
-def print_player_view(player, current_player_color, other_pawns, game_info):
+def print_player_view(player, players, game_info):
     # Determine player order from clients view
     client_index = game_info.player_colors.index(player.color)
     player_colors_in_turn_order = game_info.player_colors[client_index:] + game_info.player_colors[:client_index]
-    all_pawns = player.pawns + other_pawns
-    all_pawns_on_board = [pawn for pawn in all_pawns if not pawn.home and not pawn.finish]
+    all_pawns_on_board = [pawn for pawn in players.all_pawns if not pawn.home and not pawn.finish]
     positions_of_all_pawns_on_board = [pawn.position for pawn in all_pawns_on_board]
 
-    print(f"\n==========================={current_player_color.upper()}'s turn===========================")
+    print(f"\n==========================={player.color.upper()}'s turn===========================")
     print("\nSTART\t\t|BOARD")
     for player_color in player_colors_in_turn_order:
         player_turn_index = player_colors_in_turn_order.index(player_color)
@@ -92,7 +87,7 @@ def print_player_view(player, current_player_color, other_pawns, game_info):
     # Now for pawns in finish
     print("\nFINISH")
     for player_color in player_colors_in_turn_order:
-        all_pawns_in_finish_of_this_color = [pawn for pawn in all_pawns if pawn.finish and pawn.color == player_color]
+        all_pawns_in_finish_of_this_color = [pawn for pawn in players.all_pawns if pawn.finish and pawn.color == player_color]
         player_turn_index = player_colors_in_turn_order.index(player_color)
         print(f"{player_color.upper()[:8]: <8}\t", end="|")
         for finish_position in range(4):
@@ -109,9 +104,9 @@ def print_player_view(player, current_player_color, other_pawns, game_info):
     print('\n' + player.color + ' hand: ' + ''.join(card.rank for card in player.hand))
 
 
-def pick_a_pawn(player, other_pawns, game_info, my_pawn):
+def pick_a_pawn(player, players, game_info, my_pawn):
     my_pawns_on_board = [pawn for pawn in player.pawns if not pawn.home]
-    other_pawns_on_board = [pawn for pawn in other_pawns if not pawn.finish and not pawn.home]
+    other_pawns_on_board = [pawn for pawn in players.other_pawns(player) if not pawn.finish and not pawn.home]
     all_pawns_on_board = my_pawns_on_board + other_pawns_on_board
     positions_of_all_pawns_on_board = [pawn.position for pawn in all_pawns_on_board]
     pawn_is_picked = False
@@ -148,7 +143,7 @@ def pick_a_pawn(player, other_pawns, game_info, my_pawn):
     return my_pawn
 
 
-def pick_card_play(player, other_pawns, game_info):
+def pick_card_play(player, players, game_info):
     if not player.hand:
         card_play_dict = None
         print("Hand is empty, turn is automatically skipped.")
@@ -175,9 +170,9 @@ def pick_card_play(player, other_pawns, game_info):
             card = None
             print(f"\"{card_choice}\" is not in " + ''.join(card.rank for card in player.hand))
 
-    my_pawn = pick_a_pawn(player, other_pawns, game_info, my_pawn)
+    my_pawn = pick_a_pawn(player, players, game_info, my_pawn)
     if card.rank == "J" or card.is_splittable:
-        target_pawn = pick_a_pawn(player, other_pawns, game_info, target_pawn)
+        target_pawn = pick_a_pawn(player, players, game_info, target_pawn)
     else:
         target_pawn = None
     if card.is_splittable and target_pawn:

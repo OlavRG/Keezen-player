@@ -16,20 +16,20 @@ def main():
             case 'view_board_state':
                 board_state = message["content"]
                 # Parse board state, return pawn objects, hand object, player object
-                [player, current_player_color, other_pawns, discard_pile, game_info] = (
+                [player, players, discard_pile, game_info] = (
                     board_state_logic.create_game_objects_from_board_state(board_state))
 
-                client_view.print_player_view(player, current_player_color, other_pawns, game_info)
+                client_view.print_player_view(player, players, game_info)
 
             case 'play_from_board_state':
                 board_state = message["content"]
                 # Parse board state, return pawn objects, hand object, player object
-                [player, current_player_color, other_pawns, discard_pile, game_info] = (
+                [player, players, discard_pile, game_info] = (
                     board_state_logic.create_game_objects_from_board_state(board_state))
                 if not player_is_human:
                     card_play = keezen_bot(board_state)
                 else:
-                    card_play = client_view.pick_card_play(player, other_pawns, game_info)
+                    card_play = client_view.pick_card_play(player, players, game_info)
                 socket_to_server.send(card_play)
 
             case 'client_card_play_dict':

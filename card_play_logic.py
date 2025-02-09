@@ -13,9 +13,8 @@ from game_info import GameInfo
 from player import Player
 
 
-def check_for_tackled_pawn_and_move_them_home(my_pawn, my_pawns, other_pawns):
-    my_other_pawns = [value for value in my_pawns if value != my_pawn]
-    for target_pawn in my_other_pawns + other_pawns:
+def check_for_tackled_pawn_and_move_them_home(my_pawn, players):
+    for target_pawn in [pawn for pawn in players.all_pawns if pawn != my_pawn]:
         if my_pawn.position == target_pawn.position and not target_pawn.finish: # finish should be implemented better
             target_pawn.move_home()
 
@@ -27,7 +26,7 @@ def create_card_play(card, my_pawn, target_pawn=None, move_value=None, card_play
             "board_value": board_value}
 
 
-def do_card_play_and_resolve_outcome(card_play, player, other_pawns,
+def do_card_play_and_resolve_outcome(card_play, player, players,
                                      game_info, card_plays_on_pawns_and_outcomes):
     my_other_pawns = [pawn for pawn in player.pawns if pawn != card_play["primary_pawn"]]
     position_1 = card_play["primary_pawn"].position
@@ -51,14 +50,14 @@ def do_card_play_and_resolve_outcome(card_play, player, other_pawns,
         pass
 
     # check if move is legal
-    card_play_is_legal_p1 = is_card_play_legal(card_play["primary_pawn"], my_other_pawns, other_pawns,
+    card_play_is_legal_p1 = is_card_play_legal(card_play["primary_pawn"], my_other_pawns, players.other_pawns(player),
                                                move_value, game_info)
 
     # check legality for target pawn
     if card_play["secondary_pawn"]:
-        other_pawns_owned_by_target = [pawn for pawn in [card_play["primary_pawn"]] + my_other_pawns + other_pawns if
+        other_pawns_owned_by_target = [pawn for pawn in players.all_pawns if
                                        pawn.color == card_play["secondary_pawn"].color and pawn != card_play["secondary_pawn"]]
-        pawns_not_owned_by_target = [pawn for pawn in [card_play["primary_pawn"]] + my_other_pawns + other_pawns if
+        pawns_not_owned_by_target = [pawn for pawn in players.all_pawns if
                                      pawn.color != card_play["secondary_pawn"].color]
         card_play_is_legal_p2 = is_card_play_legal(card_play["secondary_pawn"], other_pawns_owned_by_target, pawns_not_owned_by_target,
                                                    move_2, game_info)
@@ -69,70 +68,66 @@ def do_card_play_and_resolve_outcome(card_play, player, other_pawns,
 
     # If a pawn was tackled during move, move it off the board here. This must be done after card_play_is_legal, since
     # that function checks for protected pawns being illegally tackled
-    check_for_tackled_pawn_and_move_them_home(card_play["primary_pawn"], [card_play["primary_pawn"]] + my_other_pawns, other_pawns)
+    check_for_tackled_pawn_and_move_them_home(card_play["primary_pawn"], players)
     if card_play["secondary_pawn"]:
-        other_pawns_owned_by_target = [pawn for pawn in [card_play["primary_pawn"]] + my_other_pawns + other_pawns if
-                                       pawn.color == card_play["secondary_pawn"].color and pawn != card_play["secondary_pawn"]]
-        pawns_not_owned_by_target = [pawn for pawn in [card_play["primary_pawn"]] + my_other_pawns + other_pawns if
-                                     pawn.color != card_play["secondary_pawn"].color]
-        check_for_tackled_pawn_and_move_them_home(card_play["secondary_pawn"], other_pawns_owned_by_target, pawns_not_owned_by_target)
+        check_for_tackled_pawn_and_move_them_home(card_play["secondary_pawn"], players)
 
-    for pawn in [card_play["primary_pawn"]] + my_other_pawns + other_pawns:
+    for pawn in players.all_pawns:
         pawn.reset_start_of_turn_bools_for_next_turn()
 
     # get board value
-    board_value = get_board_value([card_play["primary_pawn"]] + my_other_pawns, other_pawns, game_info)
+    board_value = get_board_value(player.pawns, game_info)
     card_plays_on_pawns_and_outcomes.append([create_card_play(card_play["card"], card_play["primary_pawn"], card_play["secondary_pawn"],
                                                               move_value, card_play_is_legal, board_value)])
 
-    return card_plays_on_pawns_and_outcomes, [card_play["primary_pawn"]] + my_other_pawns, other_pawns
+    return card_plays_on_pawns_and_outcomes, [card_play["primary_pawn"]] + my_other_pawns, players.other_pawns(player)
 
 
 def reset_pawns_to_previous_state(backup_pawns, pawns):
-    for pawn_number in range(len(pawns)):
-        pawns[pawn_number].__dict__.update(backup_pawns[pawn_number].__dict__)
+    for number, pawn in enumerate(pawns):
+        pawns[number].__dict__.update(backup_pawns[number].__dict__)
 
 
 # test the outcomes of all plays without playing them (like playing it in your mind)
-def test_all_possible_plays(player, other_pawns, discard_pile, game_info):
+def test_all_possible_plays(player, players, game_info):
     my_backup_pawns = copy.deepcopy(player.pawns)
-    other_backup_pawns = copy.deepcopy(other_pawns)
+    other_backup_pawns = copy.deepcopy(players.other_pawns(player))
     card_plays_on_pawns_and_outcomes = []
     for card in player.hand:
         for my_pawn in player.pawns:
             card_play = create_card_play(card, my_pawn)
             my_other_pawns = [value for value in player.pawns if value != my_pawn]
             if card.is_splittable:
-                do_card_play_and_resolve_outcome(card_play, player, other_pawns, game_info,
+                do_card_play_and_resolve_outcome(card_play, player, players, game_info,
                                                  card_plays_on_pawns_and_outcomes)
                 # reset pawns back to original position
                 reset_pawns_to_previous_state(my_backup_pawns, player.pawns)
-                reset_pawns_to_previous_state(other_backup_pawns, other_pawns)
+                reset_pawns_to_previous_state(other_backup_pawns, players.other_pawns(player))
                 for my_other_pawn in my_other_pawns:
                     for move_1 in range(1, card.move_value):
                         card_play["secondary_pawn"] = my_other_pawn
                         card_play["primary_move"] = move_1
-                        do_card_play_and_resolve_outcome(card_play, player, other_pawns, game_info,
+                        do_card_play_and_resolve_outcome(card_play, player, players, game_info,
                                                          card_plays_on_pawns_and_outcomes)
                         # reset pawns back to original position
                         reset_pawns_to_previous_state(my_backup_pawns, player.pawns)
-                        reset_pawns_to_previous_state(other_backup_pawns, other_pawns)
+                        reset_pawns_to_previous_state(other_backup_pawns, players.other_pawns(player))
 
             elif card.rank == 'J':
-                for other_pawn in other_pawns:
+                for other_pawn in players.other_pawns(player):
                     card_play["secondary_pawn"] = other_pawn
-                    do_card_play_and_resolve_outcome(card_play, player, other_pawns, game_info,
+                    do_card_play_and_resolve_outcome(card_play, player, players, game_info,
                                                      card_plays_on_pawns_and_outcomes)
                     # reset pawns back to original position
                     reset_pawns_to_previous_state(my_backup_pawns, player.pawns)
-                    reset_pawns_to_previous_state(other_backup_pawns, other_pawns)
+                    reset_pawns_to_previous_state(other_backup_pawns, players.other_pawns(player))
 
             else:
-                do_card_play_and_resolve_outcome(card_play, player, other_pawns, game_info,
+                do_card_play_and_resolve_outcome(card_play, player, players, game_info,
                                                  card_plays_on_pawns_and_outcomes)
                 # reset pawns back to original position
                 reset_pawns_to_previous_state(my_backup_pawns, player.pawns)
-                reset_pawns_to_previous_state(other_backup_pawns, other_pawns)
+                reset_pawns_to_previous_state(other_backup_pawns, players.other_pawns(player))
     return card_plays_on_pawns_and_outcomes
 
 
