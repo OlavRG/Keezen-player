@@ -3,6 +3,7 @@ class Card():
         self.rank = rank
         self.suit = suit
         self.is_splittable = False
+        self.move_value = 0
         if rank == 'A':
             self.move_value = 1
         if rank == '2':

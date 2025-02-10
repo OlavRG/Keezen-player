@@ -126,9 +126,9 @@ class Pawn:
     def set_position_relative_to_current_player(self, current_player, game_info):
         if self.color != current_player.color:
             pawn_turn_relative_to_player = (
-                        (game_info.player_colors.index(self.color) -
-                         game_info.player_colors.index(current_player.color)) %
-                        len(game_info.player_colors))
+                    (game_info.player_colors_in_turn_order.index(self.color) -
+                     game_info.player_colors_in_turn_order.index(current_player.color)) %
+                    len(game_info.player_colors_in_turn_order))
             self.position = (self.position_from_own_start + 16 * pawn_turn_relative_to_player) % game_info.board_size
             self.position_at_start_of_turn = self.position
         else:

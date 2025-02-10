@@ -14,12 +14,10 @@ import random
 
 
 def create_game_objects_from_board_state(board_state):
-    # Create game_info. Get unique colors with same order as board_state. This determines player order!
-    player_colors = []
-    for pawn in board_state["pawns"]:
-        if pawn["color"] not in player_colors:
-            player_colors.append(pawn["color"])
-    game_info = GameInfo(player_colors)
+    # Note that hand size for not current_player is not yet added. Maybe simply add blind cards to hand like Card('_')
+
+    # Create game_info.
+    game_info = GameInfo(board_state["player_colors_in_turn_order"])
 
     # Create discard pile
     discard_pile_card_string = ''.join(player_history["card_history"] for player_history in board_state["card_history"])
@@ -27,8 +25,8 @@ def create_game_objects_from_board_state(board_state):
 
     # Create all players
     players = Players()
-    for player_n in range(0, game_info.player_count):
-        players.append(Player(game_info.player_colors[player_n]))
+    for player_n, color in enumerate(game_info.player_colors_in_turn_order):
+        players.append(Player(color))
         players[player_n].card_history = ''.join(
             player_history["card_history"] for player_history in board_state["card_history"]
             if player_history["color"] == players[player_n].color)
@@ -52,8 +50,9 @@ def create_game_objects_from_board_state(board_state):
             current_player.pawns.append(Pawn(pawn["color"], pawn["position"], pawn["position"],
                                              pawn["home"], pawn["finish"], is_protected))
         elif pawn["color"] != current_player.color:
-            pawn_turn_relative_to_player = ((player_colors.index(pawn["color"]) -
-                                             player_colors.index(current_player.color)) % len(player_colors))
+            pawn_turn_relative_to_player = ((game_info.player_colors_in_turn_order.index(pawn["color"]) -
+                                            game_info.player_colors_in_turn_order.index(current_player.color)) %
+                                            game_info.player_count)
             position_relative_to_player_start = pawn["position"] + 16 * pawn_turn_relative_to_player
             position_relative_to_player_start = position_relative_to_player_start % game_info.board_size
             relevant_player = next((player for player in players if player.color == pawn["color"]), None)
@@ -97,26 +96,26 @@ def create_starting_game_objects(n_players):
     random.shuffle(deck)
     discard_pile = []
     players = Players()
-    for player_n in range(0, n_players):
-        players.append(Player(colors[player_n]))
-        players[player_n].pawns.append(Pawn(colors[player_n], 0, 0, home=True, finish=False, protected=True))
-        players[player_n].pawns.append(Pawn(colors[player_n], 0, 0, home=True, finish=False, protected=True))
-        players[player_n].pawns.append(Pawn(colors[player_n], 0, 0, home=True, finish=False, protected=True))
-        players[player_n].pawns.append(Pawn(colors[player_n], 0, 0, home=True, finish=False, protected=True))
+    for player_n, color in enumerate(game_info.player_colors_in_turn_order):
+        players.append(Player(color))
+        players[player_n].pawns.append(Pawn(color, 0, 0, home=True, finish=False, protected=True))
+        players[player_n].pawns.append(Pawn(color, 0, 0, home=True, finish=False, protected=True))
+        players[player_n].pawns.append(Pawn(color, 0, 0, home=True, finish=False, protected=True))
+        players[player_n].pawns.append(Pawn(color, 0, 0, home=True, finish=False, protected=True))
     return players, deck, discard_pile, game_info
 
 
 def create_board_states_per_client(players, deck, game_info):
     board_states = [{} for iterator in range(0, len(players))]
     hands = [[] for iterator in range(0, len(players))]
-    other_hands_size = [[] for iterator in range(0, len(players))]
+    hand_size = []
     pawns = []
     card_history = []
     for n_player in range(0, len(players)):
         hands[n_player] = ''.join(card.rank for card in players[n_player].hand)
         board_states[n_player]["hand"] = hands[n_player]
-        other_hands_size[n_player] = [len(any_player.hand) for any_player in players if any_player != players[n_player]]
-        board_states[n_player]["other_hands"] = other_hands_size[n_player]
+        hand_size.append({"color": players[n_player].color, "hand_size": len(players[n_player].hand)})
+        board_states[n_player]["hand_size"] = hand_size
         board_states[n_player]["my_color"] = players[n_player].color
         board_states[n_player]["current_player_color"] = ''
         card_history.append({"color": players[n_player].color, "card_history": players[n_player].card_history})
@@ -125,7 +124,7 @@ def create_board_states_per_client(players, deck, game_info):
             pawns.append({"color": pawn.color, "position": pawn.position_from_own_start % game_info.board_size,
                           "home": pawn.home, "finish": pawn.finish})
         board_states[n_player]["pawns"] = pawns
-
+        board_states[n_player]["player_colors_in_turn_order"] = game_info.player_colors_in_turn_order
     # next: cards left in deck should be added to board state format
     return board_states
 
@@ -148,13 +147,19 @@ board_state_start = {"pawns": [
     {"color": "White", "position": 2, "home": True, "finish": False},
     {"color": "White", "position": 3, "home": True, "finish": False}],
     "hand": 'A47JQ',
-    "other_hands": [5, 5, 5],
+    "hand_size": [
+        {"color": "Blue", "hand_size": 5},
+        {"color": "Orange", "hand_size": 5},
+        {"color": "Red", "hand_size": 5},
+        {"color": "White", "hand_size": 5}],
     "my_color": "Orange",
+    "current_player_color": "",
     "card_history": [
         {"color": "Blue", "card_history": '483JX'},
         {"color": "Orange", "card_history": '483JX'},
         {"color": "Red", "card_history": '483JX'},
-        {"color": "White", "card_history": '483JX'}]
+        {"color": "White", "card_history": '483JX'}],
+    "player_colors_in_turn_order": ["Blue", "Orange", "Red", "White"]
 }
 
 """

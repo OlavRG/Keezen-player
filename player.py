@@ -6,19 +6,18 @@ class Player:
         self.hand = []
         # card_history should be reset everytime the deck is dealt
         self.card_history = ''
-        self._hand_size = self.hand_size
+        self._hand_size = self.hand_size # Hand size is annoying. Now you have to change this value every time a card is
+        # played, discarded, or removed from the hand. And hand size is already known from self.hand!
+        # New idea: scrap self.hand_size. Instead, add blind cards to players hands when creating another player from
+        # a player PoV. Like Card('_'). This mirrors real life, where you see actual cards, but do not know their rank.
 
     @property
     def hand_size(self):
-        if self.hand:
-            _hand_size = len(self.hand)
-        else:
-            _hand_size = 0
-        return _hand_size
+        return len(self.hand)
 
     @hand_size.setter
     def hand_size(self, value):
-        _hand_size = value
+        self._hand_size = value
 
 
 class Players(list):
