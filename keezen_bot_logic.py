@@ -14,6 +14,7 @@ from card_play_logic import test_all_possible_plays
 from card_play_logic import do_card_play_and_resolve_outcome
 from card_play_logic import move_card_from_hand_to_discard_and_mark_in_player_card_history
 from card_play_logic import reset_pawns_to_previous_state
+from card_play_logic import create_card_play
 
 
 def test_next_round_card_plays(player, players, game_info, card_play):
@@ -33,6 +34,19 @@ def test_next_round_card_plays(player, players, game_info, card_play):
 
 
 def test_all_possible_follow_up_plays(legal_card_plays, dead_end_plays, player, players, game_info, discard_pile):
+    """
+    Takes a list of legal card play sequences. Each sequence is a list of card plays the player could play this round,
+    ordered by index. For each sequence this functions simulates playing it, and then testing any follow-up card play.
+    Sequences that result in discarding part of the hand are stored in dead_end_plays (and are legal!), the rest in
+    legal_card_plays.
+    :param legal_card_plays:
+    :param dead_end_plays:
+    :param player:
+    :param players:
+    :param game_info:
+    :param discard_pile:
+    :return:
+    """
     all_card_plays = []
     backup_player_card_history = player.card_history
     my_backup_pawns = copy.deepcopy(player.pawns)
@@ -77,13 +91,19 @@ def test_all_possible_follow_up_plays(legal_card_plays, dead_end_plays, player, 
     return all_legal_card_plays, dead_end_plays
 
 
-def pick_play_with_highest_eventual_board_value(all_plays):
-    highest_value = 0
-    best_play = None
+def pick_play_with_highest_eventual_board_value(all_plays) -> dict:
+    """
+    Takes the output of test_all_possible_follow_up_plays (or an empty card play) and finds the one that ends with the
+    greatest board_value.
+    :param all_plays:  A list of lists. Every sub-list is a sequence of card plays a player could legally make this round.
+    :return: a card play dict, formatted as card_play
+    """
+    highest_value = -1  # -1 to be lower than 0, the value of an empty card_play
+    best_play = None  # There should always be a card play as input, so this should always be overwritten
     for play in all_plays:
         if play[-1]["board_value"] > highest_value:
             highest_value = play[-1]["board_value"]
-            best_play = play
+            best_play = play[0]
         else:
             pass
     return best_play

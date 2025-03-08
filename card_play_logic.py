@@ -4,7 +4,7 @@
 # and optionally the legality and resulting board_value. Functions looking at card_plays of consecutive turns are
 # captured in keezen_bot_logic.py.
 
-from is_card_play_legal import is_card_play_legal
+from is_pawn_move_legal import is_pawn_move_legal
 import copy
 from board_value import get_board_value
 from card import Card
@@ -50,7 +50,7 @@ def do_card_play_and_resolve_outcome(card_play, player, players,
         pass
 
     # check if move is legal
-    card_play_is_legal_p1 = is_card_play_legal(card_play["primary_pawn"], my_other_pawns, players.other_pawns(player),
+    card_play_is_legal_p1 = is_pawn_move_legal(card_play["primary_pawn"], my_other_pawns, players.other_pawns(player),
                                                move_value, game_info)
 
     # check legality for target pawn
@@ -59,7 +59,7 @@ def do_card_play_and_resolve_outcome(card_play, player, players,
                                        pawn.color == card_play["secondary_pawn"].color and pawn != card_play["secondary_pawn"]]
         pawns_not_owned_by_target = [pawn for pawn in players.all_pawns if
                                      pawn.color != card_play["secondary_pawn"].color]
-        card_play_is_legal_p2 = is_card_play_legal(card_play["secondary_pawn"], other_pawns_owned_by_target, pawns_not_owned_by_target,
+        card_play_is_legal_p2 = is_pawn_move_legal(card_play["secondary_pawn"], other_pawns_owned_by_target, pawns_not_owned_by_target,
                                                    move_2, game_info)
     else:
         card_play_is_legal_p2 = True
@@ -88,8 +88,14 @@ def reset_pawns_to_previous_state(backup_pawns, pawns):
         pawns[number].__dict__.update(backup_pawns[number].__dict__)
 
 
-# test the outcomes of all plays without playing them (like playing it in your mind)
 def test_all_possible_plays(player, players, game_info):
+    """
+    Test every card and pawn combination of the player (and other players pawns for 7s and Js).
+    :param player:
+    :param players:
+    :param game_info:
+    :return: List of all card plays, formatted as card_play
+    """
     my_backup_pawns = copy.deepcopy(player.pawns)
     other_backup_pawns = copy.deepcopy(players.other_pawns(player))
     card_plays_on_pawns_and_outcomes = []
@@ -131,13 +137,40 @@ def test_all_possible_plays(player, players, game_info):
     return card_plays_on_pawns_and_outcomes
 
 
-def card_play_to_dict(card_play):
-    # check if there is any legal play
-    if not card_play:
-        card_play_dict = None
-        return card_play_dict
+def is_card_play_legal(player, players, game_info, client_card_play_dict):
+    # Make a list of all possible plays and check if the clients move is in it
+    all_card_plays = test_all_possible_plays(player, players, game_info)
+    legal_card_plays = [card_play[0] for card_play in all_card_plays if card_play[-1]["card_play_is_legal"]]
+    if not legal_card_plays:   # In case no card can be played, an empty card_play is expected as input
+        legal_card_plays.append(create_card_play(None,None,))
+    legal_card_play_dicts = list(map(card_play_to_dict, legal_card_plays))
+    client_card_play_is_legal = False
+    if client_card_play_dict in legal_card_play_dicts:
+        client_card_play_is_legal = True
+        return client_card_play_is_legal
     else:
-        card_play = card_play[0]
+        return client_card_play_is_legal
+
+
+def card_play_to_dict(card_play: dict):
+    """
+    :param card_play: dict that contains game object like Pawn, Card, and some values
+    :return: card play dict that only contains strings and ints. Primarily used for communication over network
+    """
+    # check if there is any legal play
+    if not card_play["card"]:
+        # A card_play_dict with None means the player does not play a card and instead wants to discard their hand
+        card_play_dict = {"card": None,
+                          "primary_pawn_color": None,
+                          "primary_pawn_position": None,
+                          "primary_pawn_home": None,
+                          "primary_pawn_finish": None,
+                          "secondary_pawn_color": None,
+                          "secondary_pawn_position": None,
+                          "secondary_pawn_home": None,
+                          "secondary_pawn_finish": None,
+                          "primary_move": None}
+        return card_play_dict
     if card_play["secondary_pawn"]:
         secondary_pawn_color = card_play["secondary_pawn"].color
         secondary_pawn_position_from_own_start = card_play["secondary_pawn"].position_from_own_start
@@ -160,6 +193,29 @@ def card_play_to_dict(card_play):
                       "secondary_pawn_finish": secondary_pawn_finish,
                       "primary_move": card_play["primary_move"]}
     return card_play_dict
+
+
+def card_play_dict_to_card_play(card_play_dict, player, players):
+    # This functions assumes the card and pawns from the dict exist in the player object. Error handling should be
+    # added for cases where card_play_dict describes cards, pawns that do not exist
+    eligible_cards = [card for card in player.hand if card.rank == card_play_dict["card"]]
+    try:
+        card = eligible_cards[0]
+    except IndexError as error:
+        print(f'Card "{card_play_dict["card"]}" in card play dict does not match any card in players hand.')
+        print(f'Player hand: {"".join(card.rank for card in player.hand)}')
+        print(error)
+    eligible_pawns = [pawn for pawn in player.pawns if pawn.color == card_play_dict["primary_pawn_color"]
+                      and pawn.position_from_own_start == card_play_dict["primary_pawn_position"]]
+    my_pawn = eligible_pawns[0] # pawns can have identical position when they are home
+    eligible_target_pawns = [pawn for pawn in players.all_pawns if pawn.color == card_play_dict["secondary_pawn_color"]
+                             and pawn.position_from_own_start == card_play_dict["secondary_pawn_position"]]
+    try:
+        target_pawn = eligible_target_pawns[0]
+    except IndexError as error:
+        target_pawn = None
+    move_value = card_play_dict["primary_move"]
+    return create_card_play(card, my_pawn, target_pawn, move_value, card_play_is_legal=False, board_value=0)
 
 
 def move_card_from_hand_to_discard_and_mark_in_player_card_history(player: Player, card: Card, discard_pile: list):

@@ -118,7 +118,7 @@ def play_jack_on_protected_pawn(my_pawn, other_pawns):
     return legal
 
 
-def is_card_play_legal(my_pawn, my_other_pawns, other_pawns, move_value, game_info):
+def is_pawn_move_legal(my_pawn, my_other_pawns, other_pawns, move_value, game_info):
     legal_play_jack_on_single_pawn = play_jack_on_single_pawn(my_pawn)
     legal_move_past_board_size = move_past_board_size(my_pawn, game_info)
     legal_spawn = spawn_at_occupied_base(my_pawn, my_other_pawns)

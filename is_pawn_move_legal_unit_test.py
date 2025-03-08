@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
 This test takes all the board states + card plays + expected legality from board_state_play_legality_unit_test.py and
-gives each as input to is_card_play_legal.py and compares the result with the expected legality.
+gives each as input to is_pawn_move_legal.py and compares the result with the expected legality.
 
 TO DO:
 - Rewrite this file to fit the above description
-- Either change is_card_play_legal.py to take board state + card_play as input, or make some transition function
+- Either change is_pawn_move_legal.py to take board state + card_play as input, or make some transition function
 - How to add this as an action in Github?
 
 Created on Sun March 24 2024

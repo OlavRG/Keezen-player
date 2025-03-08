@@ -29,27 +29,27 @@ class Network:
 
             # Receive the message data
             chunks = []
-            bytes_recd = 0
-            while bytes_recd < message_length:
-                chunk = self.socket_obj.recv(min(message_length - bytes_recd,
+            bytes_received = 0
+            while bytes_received < message_length:
+                chunk = self.socket_obj.recv(min(message_length - bytes_received,
                                       BUFFER_SIZE))
                 if not chunk:
                     raise RuntimeError("ERROR")
                 chunks.append(chunk)
-                bytes_recd += len(chunk)
+                bytes_received += len(chunk)
 
             encoded_message = b"".join(chunks)
             test_dict = json.loads(encoded_message.decode("utf-8"))
             return test_dict
-        except json.decoder.JSONDecodeError as e:
+        except json.decoder.JSONDecodeError as error:
             print("JSONDecodeError: ")
-            print(e)
+            print(error)
         except ConnectionResetError as error:
-            input('Check for error manually, '
-                  'input anything to continue with the ConnectionResetError [WinError 10054]')
+            print("ConnectionResetError: ")
+            print(error)
         except ConnectionAbortedError as error:
-            input('Check for error manually, '
-                  'input anything to continue with the ConnectionAbortedError [WinError 10053]')
+            print("ConnectionAbortedError: ")
+            print(error)
 
     def close(self):
         self.socket_obj.close()
@@ -85,8 +85,8 @@ class SocketsToClients:
         self.all_sockets_to_clients.append(new_socket)
         self.n_clients = len(self.all_sockets_to_clients)
 
-    def send_to_a_client(self, client_number, data):
-        self.all_sockets_to_clients[client_number].send(data)
+    def send_to_a_client(self, client_number, header, content):
+        self.all_sockets_to_clients[client_number].send({"header": header, "content": content})
 
     def receive_from_a_client(self, client_number):
         return self.all_sockets_to_clients[client_number].receive()

@@ -11,14 +11,17 @@ from card_play_logic import test_all_possible_plays
 from card_play_logic import card_play_to_dict
 from card_play_logic import do_card_play_and_resolve_outcome
 from card_play_logic import move_card_from_hand_to_discard_and_mark_in_player_card_history
+from card_play_logic import is_card_play_legal
+from card_play_logic import card_play_dict_to_card_play
 from client_view import print_player_view
+from server_CLI_view import how_many_players_in_game, view_client_card_play
 
 
 if __name__ == "__main__":
 
     # start up code
     logger = server_logging.create_logger()
-    n_clients = int(input("How many players are joining? Please state a number <=8: "))  # limit by create_starting_game_ob
+    n_clients = how_many_players_in_game()
     initial_socket = network.ServerNetwork()
     sockets_to_clients = initial_socket.establish_connections(n_clients)
     players, deck, discard_pile, game_info = create_starting_game_objects(n_clients)
@@ -33,74 +36,75 @@ if __name__ == "__main__":
 
             while any([player.hand for player in players]):
                 # turns for each client
-                for client in range(n_clients):
+                for player_index, current_player in enumerate(players):
                     # Update current player in board state
                     for board_state in board_states:
-                        board_state["current_player_color"] = players[client].color
+                        board_state["current_player_color"] = current_player.color
 
                     # Send board state and cards in hand to all players at start of each turn
                     sockets_to_clients.send_personal_message_to_each_client('view_board_state',
                                                                             board_states)
                     # Ask current player to make a move
-                    sockets_to_clients.send_to_a_client(client, {"header": 'play_from_board_state',
-                                                                 "content": board_states[client]})
-                    client_card_play_dict = sockets_to_clients.receive_from_a_client(client)
+                    sockets_to_clients.send_to_a_client(player_index, 'play_from_board_state', board_states[player_index])
+                    client_card_play_dict = sockets_to_clients.receive_from_a_client(player_index)
                     logger.info(client_card_play_dict)
 
                     # Define other_pawns and set pawn.position to the position from the current players POV
-                    players.set_pawns_to_current_player_point_of_view(players[client], game_info)
-                    current_player_color = players[client].color
+                    players.set_pawns_to_current_player_point_of_view(current_player, game_info)
 
-                    print_player_view(players[client], players, game_info)
+                    print_player_view(current_player, players, game_info)
+                    view_client_card_play(client_card_play_dict)
 
-                    print('client card play: ', client_card_play_dict)
                     sockets_to_clients.send_same_message_to_each_client(
                         'client_card_play_dict', client_card_play_dict)
 
-                    # Make a list of all possible plays and check if the clients move is in it
-                    all_card_plays = test_all_possible_plays(players[client], players, game_info)
-                    legal_card_plays = [card_play for card_play in all_card_plays if card_play[-1]["card_play_is_legal"]]
-                    legal_card_play_dicts = list(map(card_play_to_dict, legal_card_plays))
-                    if not legal_card_play_dicts:
+                    client_card_play_dict_is_legal = is_card_play_legal(current_player, players, game_info,
+                                                                        client_card_play_dict)
+                    # If the play is legal and player does not wish to discard their hand.
+                    if client_card_play_dict_is_legal and client_card_play_dict["card"] is not None:
+                        # Print that the play is deemed legal
+                        print('card play is legal')
+                        # resolve client_card_play
+                        client_card_play = card_play_dict_to_card_play(client_card_play_dict, current_player, players)
+                        do_card_play_and_resolve_outcome(client_card_play, current_player, players, game_info,
+                                                         card_plays_on_pawns_and_outcomes=[])
+                        # Discard card from hand
+                        move_card_from_hand_to_discard_and_mark_in_player_card_history(current_player,
+                                                                                       client_card_play["card"],
+                                                                                       discard_pile)
+                    # If the play is legal and player does wish to discard their hand.
+                    elif client_card_play_dict_is_legal and client_card_play_dict["card"] is None:
                         # Discard hand
-                        if players[client].hand:
-                            discard_pile.extend(players[client].hand[:])
-                            players[client].card_history += ''.join(card.rank for card in players[client].hand)
-                            players[client].hand[:] = []
+                        if current_player.hand:
+                            discard_pile.extend(current_player.hand[:])
+                            current_player.card_history += ''.join(card.rank for card in current_player.hand)
+                            current_player.hand[:] = []
                             print('No legal card play available, hand is discarded')
                         else:
                             print('No legal card play available')
-                    elif client_card_play_dict not in legal_card_play_dicts:
+                    # If the play is not legal.
+                    elif not client_card_play_dict_is_legal:
                         # Play the lowest value card_play
+                        all_card_plays = test_all_possible_plays(current_player, players, game_info)
+                        legal_card_plays = [card_play for card_play in all_card_plays if
+                                            card_play[-1]["card_play_is_legal"]]
                         legal_card_play_board_values = [card_play[0]["board_value"] for card_play in legal_card_plays]
                         worst_card_play_index = legal_card_play_board_values.index(min(legal_card_play_board_values))
                         worst_card_play = legal_card_plays[worst_card_play_index][0]
                         print('Provided card play is illegal. Worst card play was played instead.')
                         print('Substituted card play: ', card_play_to_dict([worst_card_play]))
-                        do_card_play_and_resolve_outcome(worst_card_play, players[client], players, game_info,
+                        do_card_play_and_resolve_outcome(worst_card_play, current_player, players, game_info,
                                                          card_plays_on_pawns_and_outcomes=[])
                         # Discard card from hand
-                        move_card_from_hand_to_discard_and_mark_in_player_card_history(players[client],
+                        move_card_from_hand_to_discard_and_mark_in_player_card_history(current_player,
                                                                                        worst_card_play["card"],
                                                                                        discard_pile)
-                    else:
-                        # Print that the play is deemed legal
-                        print('card play is legal')
-                        # resolve client_card_play
-                        client_card_play_index = legal_card_play_dicts.index(client_card_play_dict)
-                        client_card_play = legal_card_plays[client_card_play_index][0]
-                        do_card_play_and_resolve_outcome(client_card_play, players[client], players, game_info,
-                                                         card_plays_on_pawns_and_outcomes=[])
-                        # Discard card from hand
-                        move_card_from_hand_to_discard_and_mark_in_player_card_history(players[client],
-                                                                                       client_card_play["card"],
-                                                                                       discard_pile)
                     board_states = create_board_states_per_client(players, deck, game_info)
-                    all_pawns_of_current_player_are_in_finish = all([pawn.finish for pawn in players[client].pawns])
+                    all_pawns_of_current_player_are_in_finish = all([pawn.finish for pawn in current_player.pawns])
                     sockets_to_clients.send_same_message_to_each_client(
                         'all_pawns_of_current_player_are_in_finish', all_pawns_of_current_player_are_in_finish)
                     if all_pawns_of_current_player_are_in_finish:
-                        print("player " + str(players[client].color) + ' has won')
+                        print("player " + str(current_player.color) + ' has won')
                         break
                 if all_pawns_of_current_player_are_in_finish:
                     break
