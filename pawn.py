@@ -1,8 +1,9 @@
 
 class Pawn:
-    def __init__(self, color, position, home, finish, protected):
+    def __init__(self, color, position, start_position, home, finish, protected):
         self.color = color
-        self.position = position    # position relative to the current players start
+        self.start_position = start_position
+        self.position = position    # position relative to start of first player in the game
         self.position_at_start_of_turn = position
         self.home = home
         self.home_at_start_of_turn = home
