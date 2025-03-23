@@ -1,11 +1,9 @@
 
 class Pawn:
-    def __init__(self, color, position, position_from_own_start, home, finish, protected):
+    def __init__(self, color, position, home, finish, protected):
         self.color = color
         self.position = position    # position relative to the current players start
         self.position_at_start_of_turn = position
-        self.position_from_own_start = position_from_own_start      # position relative to start of pawns color
-        self.position_from_own_start_at_start_of_turn = position_from_own_start
         self.home = home
         self.home_at_start_of_turn = home
         self.finish = finish
@@ -17,15 +15,12 @@ class Pawn:
 
     def reset_start_of_turn_bools_for_next_turn(self):
         self.position_at_start_of_turn = self.position
-        self.position_from_own_start_at_start_of_turn = self.position_from_own_start
         self.home_at_start_of_turn = self.home
         self.finish_at_start_of_turn = self.finish
 
     def move_home(self):
         self.position_at_start_of_turn = self.position
-        self.position_from_own_start_at_start_of_turn = self.position_from_own_start
         self.home_at_start_of_turn = self.home
-        self.position_from_own_start = 0
         self.position = 0
         self.home = True
         self.finish = False
@@ -69,9 +64,7 @@ class Pawn:
 
     def _update_pawn_positions_by_move_value(self, move_value, board_size):
         self.position_at_start_of_turn = self.position
-        self.position_from_own_start_at_start_of_turn = self.position_from_own_start
         self.position += move_value
-        self.position_from_own_start += move_value
         self._check_for_finish(board_size)
         self._check_for_negative_position(board_size)
         self._check_for_protection_from_own_0()
@@ -81,8 +74,6 @@ class Pawn:
             if self.home:
                 self.home_at_start_of_turn = self.home
                 self.home = False
-                self.position_from_own_start_at_start_of_turn = self.position_from_own_start
-                self.position_from_own_start = 0
                 self.position_at_start_of_turn = self.position
                 self.position = 0
                 self._check_for_finish(game_info.board_size)
@@ -99,7 +90,6 @@ class Pawn:
             self._update_pawn_positions_by_move_value(move_value, game_info.board_size)
         elif card.rank == 'J':
             self.position_at_start_of_turn = self.position
-            self.position_from_own_start_at_start_of_turn = self.position_from_own_start
             self.position = jack_other_pawn_position
             self._set_position_from_own_start_after_jack(game_info.board_size)
             self._check_for_finish(game_info.board_size)
@@ -109,8 +99,6 @@ class Pawn:
             if self.home:
                 self.home_at_start_of_turn = self.home
                 self.home = False
-                self.position_from_own_start_at_start_of_turn = self.position_from_own_start
-                self.position_from_own_start = 0
                 self.position_at_start_of_turn = self.position
                 self.position = 0
                 self._check_for_finish(game_info.board_size)

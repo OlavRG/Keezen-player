@@ -43,26 +43,3 @@ class Players(list):
             if player != current_player:
                 other_pawns.extend(player.pawns)
         return other_pawns
-
-
-"""
-class Players:
-    def __init__(self):
-        self._all_players = []
-
-    def __getitem__(self, index):
-        return self._all_players[index]
-
-    def __delitem__(self, index): 
-        del self._all_players[index]
-
-    def __len__(self):
-        return len(self._all_players)
-
-    def add_player(self, player: Player):
-        self._all_players.append(player)
-
-    def not_my_pawns(self, current_player):
-        not_my_pawns = []
-        return list(map(not_my_pawns.extend, [player.pawns for player in self._all_players if player != current_player]))
-"""

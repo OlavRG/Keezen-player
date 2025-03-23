@@ -47,8 +47,8 @@ def create_game_objects_from_board_state(board_state):
         if pawn["color"] == current_player.color:
             if pawn["finish"] and pawn["position"] in range(0, 4):
                 pawn["position"] = pawn["position"] + game_info.board_size
-            current_player.pawns.append(Pawn(pawn["color"], pawn["position"], pawn["position"],
-                                             pawn["home"], pawn["finish"], is_protected))
+            current_player.pawns.append(Pawn(pawn["color"], pawn["position"], pawn["home"],
+                                             pawn["finish"], is_protected))
         elif pawn["color"] != current_player.color:
             pawn_turn_relative_to_player = ((game_info.player_colors_in_start_order.index(pawn["color"]) -
                                              game_info.player_colors_in_start_order.index(current_player.color)) %
@@ -56,8 +56,8 @@ def create_game_objects_from_board_state(board_state):
             position_relative_to_player_start = pawn["position"] + 16 * pawn_turn_relative_to_player
             position_relative_to_player_start = position_relative_to_player_start % game_info.board_size
             relevant_player = next((player for player in players if player.color == pawn["color"]), None)
-            relevant_player.pawns.append(Pawn(pawn["color"], position_relative_to_player_start, pawn["position"],
-                                              pawn["home"], pawn["finish"], is_protected))
+            relevant_player.pawns.append(
+                Pawn(pawn["color"], position_relative_to_player_start, pawn["home"], pawn["finish"], is_protected))
     return current_player, players, discard_pile, game_info
 
 
@@ -98,10 +98,10 @@ def create_starting_game_objects(n_players):
     players = Players()
     for player_n, color in enumerate(game_info.player_colors_in_start_order):
         players.append(Player(color))
-        players[player_n].pawns.append(Pawn(color, 0, 0, home=True, finish=False, protected=True))
-        players[player_n].pawns.append(Pawn(color, 0, 0, home=True, finish=False, protected=True))
-        players[player_n].pawns.append(Pawn(color, 0, 0, home=True, finish=False, protected=True))
-        players[player_n].pawns.append(Pawn(color, 0, 0, home=True, finish=False, protected=True))
+        players[player_n].pawns.append(Pawn(color, 0, home=True, finish=False, protected=True))
+        players[player_n].pawns.append(Pawn(color, 0, home=True, finish=False, protected=True))
+        players[player_n].pawns.append(Pawn(color, 0, home=True, finish=False, protected=True))
+        players[player_n].pawns.append(Pawn(color, 0, home=True, finish=False, protected=True))
     return players, deck, discard_pile, game_info
 
 
