@@ -5,8 +5,6 @@
 # play card on pawn not on board
 
 
-# move past board size
-
 def play_jack_on_single_pawn(my_pawn):
     legal = True
     if my_pawn.position == None: # position is set to None in card_play_logic to trigger this

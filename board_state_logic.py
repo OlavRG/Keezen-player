@@ -25,7 +25,7 @@ def create_game_objects_from_board_state(board_state):
 
     # Create all players
     players = Players()
-    for player_n, color in enumerate(game_info.player_colors_in_turn_order):
+    for player_n, color in enumerate(game_info.player_colors_in_start_order):
         players.append(Player(color))
         players[player_n].card_history = ''.join(
             player_history["card_history"] for player_history in board_state["card_history"]
@@ -50,8 +50,8 @@ def create_game_objects_from_board_state(board_state):
             current_player.pawns.append(Pawn(pawn["color"], pawn["position"], pawn["position"],
                                              pawn["home"], pawn["finish"], is_protected))
         elif pawn["color"] != current_player.color:
-            pawn_turn_relative_to_player = ((game_info.player_colors_in_turn_order.index(pawn["color"]) -
-                                            game_info.player_colors_in_turn_order.index(current_player.color)) %
+            pawn_turn_relative_to_player = ((game_info.player_colors_in_start_order.index(pawn["color"]) -
+                                             game_info.player_colors_in_start_order.index(current_player.color)) %
                                             game_info.player_count)
             position_relative_to_player_start = pawn["position"] + 16 * pawn_turn_relative_to_player
             position_relative_to_player_start = position_relative_to_player_start % game_info.board_size
@@ -96,7 +96,7 @@ def create_starting_game_objects(n_players):
     random.shuffle(deck)
     discard_pile = []
     players = Players()
-    for player_n, color in enumerate(game_info.player_colors_in_turn_order):
+    for player_n, color in enumerate(game_info.player_colors_in_start_order):
         players.append(Player(color))
         players[player_n].pawns.append(Pawn(color, 0, 0, home=True, finish=False, protected=True))
         players[player_n].pawns.append(Pawn(color, 0, 0, home=True, finish=False, protected=True))
@@ -124,7 +124,7 @@ def create_board_states_per_client(players, deck, game_info):
             pawns.append({"color": pawn.color, "position": pawn.position_from_own_start % game_info.board_size,
                           "home": pawn.home, "finish": pawn.finish})
         board_states[n_player]["pawns"] = pawns
-        board_states[n_player]["player_colors_in_turn_order"] = game_info.player_colors_in_turn_order
+        board_states[n_player]["player_colors_in_turn_order"] = game_info.player_colors_in_start_order
     # next: cards left in deck should be added to board state format
     return board_states
 

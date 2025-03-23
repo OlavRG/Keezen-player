@@ -2,9 +2,9 @@
 class Pawn:
     def __init__(self, color, position, position_from_own_start, home, finish, protected):
         self.color = color
-        self.position = position
+        self.position = position    # position relative to the current players start
         self.position_at_start_of_turn = position
-        self.position_from_own_start = position_from_own_start
+        self.position_from_own_start = position_from_own_start      # position relative to start of pawns color
         self.position_from_own_start_at_start_of_turn = position_from_own_start
         self.home = home
         self.home_at_start_of_turn = home
@@ -117,7 +117,7 @@ class Pawn:
                 self._check_for_negative_position(game_info.board_size)
                 self._check_for_protection_from_own_0()
             else:
-                # This play would change nothing and is hence indetectable by is_card_play_legal. To detect the illegal
+                # This play would change nothing and is hence undetectable by is_card_play_legal. To detect the illegal
                 # play, we set to None
                 self.home_at_start_of_turn = None
         else:
@@ -126,9 +126,9 @@ class Pawn:
     def set_position_relative_to_current_player(self, current_player, game_info):
         if self.color != current_player.color:
             pawn_turn_relative_to_player = (
-                    (game_info.player_colors_in_turn_order.index(self.color) -
-                     game_info.player_colors_in_turn_order.index(current_player.color)) %
-                    len(game_info.player_colors_in_turn_order))
+                    (game_info.player_colors_in_start_order.index(self.color) -
+                     game_info.player_colors_in_start_order.index(current_player.color)) %
+                    len(game_info.player_colors_in_start_order))
             self.position = (self.position_from_own_start + 16 * pawn_turn_relative_to_player) % game_info.board_size
             self.position_at_start_of_turn = self.position
         else:

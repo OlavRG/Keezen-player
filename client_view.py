@@ -59,8 +59,8 @@ def does_player_want_to_play():
 
 def print_player_view(player, players, game_info):
     # Determine player order from clients view
-    client_index = game_info.player_colors_in_turn_order.index(player.color)
-    player_colors_in_turn_order = game_info.player_colors_in_turn_order[client_index:] + game_info.player_colors_in_turn_order[:client_index]
+    client_index = game_info.player_colors_in_start_order.index(player.color)
+    player_colors_in_turn_order = game_info.player_colors_in_start_order[client_index:] + game_info.player_colors_in_start_order[:client_index]
     all_pawns_on_board = [pawn for pawn in players.all_pawns if not pawn.home and not pawn.finish]
     positions_of_all_pawns_on_board = [pawn.position for pawn in all_pawns_on_board]
 
