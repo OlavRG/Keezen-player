@@ -32,11 +32,6 @@ class Players(list):
             self._all_pawns.extend(player.pawns)
         return self._all_pawns
 
-    def set_pawns_to_current_player_point_of_view(self, current_player, game_info):
-        for player in self:
-            for pawn in player.pawns:
-                pawn.set_position_relative_to_current_player(current_player, game_info)
-
     def other_pawns(self, current_player):
         other_pawns = []
         for player in self:

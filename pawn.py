@@ -1,8 +1,9 @@
-
+# bla test
 class Pawn:
-    def __init__(self, color, position, home, finish, protected):
+    def __init__(self, color, position, start_position, home, finish, protected):
         self.color = color
-        self.position = position    # position relative to the current players start
+        self.start_position = start_position    # position where this pawn spawns. Should be constant throughout a game
+        self.position = position    # Absolute position (relative to start of first player in the game).
         self.position_at_start_of_turn = position
         self.home = home
         self.home_at_start_of_turn = home
@@ -21,14 +22,30 @@ class Pawn:
     def move_home(self):
         self.position_at_start_of_turn = self.position
         self.home_at_start_of_turn = self.home
-        self.position = 0
+        self.finish_at_start_of_turn = self.finish
+        self.position = self.start_position
         self.home = True
         self.finish = False
-        self.finish_at_start_of_turn = False
         self.is_protected = False
 
-    def _check_for_finish(self, board_size):
-        if self.position >= board_size:
+    def _check_for_finish(self, move_value, board_size):
+        """
+        This function is strictly for moving
+        :param board_size: int
+        """
+        if move_value > 0 and self.position >= self.start_position:
+            if self.position_at_start_of_turn < self.start_position:
+                self.finish = True
+                self.position = self.position % self.start_position
+            elif self.position_at_start_of_turn + move_value != self.position: # additional requirement for pawns that
+                # start past the start_position to run past the board_size and wrap around to move into the finish
+                self.finish = True
+                self.position = self.position % self.start_position
+        else:
+             pass    # pawn did not go into finish
+
+        # move into finish
+        if move_value > 0 and self.position >= board_size:
             if self.finish:
                 self.finish_at_start_of_turn = True
             self.finish = True
@@ -38,34 +55,27 @@ class Pawn:
                 self.finish_at_start_of_turn = True
             self.finish = False
             self.is_protected = False
+        elif move_value == 0:
+            pass
         else:
             pass
 
     def _check_for_negative_position(self, board_size):
-        if self.position < 0 or self.position_from_own_start < 0:
+        if self.position < 0:
             self.position = (self.position + board_size) % board_size
-            self.position_from_own_start = (self.position_from_own_start + board_size) % board_size
-            self.is_protected = False
         else:
             pass
 
     def _check_for_protection_from_own_0(self):
-        if self.position_from_own_start == 0:
+        if self.position == self.start_position:
             self.is_protected = True
         else:
             pass
 
-    def _set_position_from_own_start_after_jack(self, board_size):
-        relative_move = self.position_at_start_of_turn - self.position
-        self.position_from_own_start = self.position_from_own_start - relative_move
-        # Following line is necessary to properly set your opponents pawn position_from_own_start. If the pawn moves
-        # over its own start (and thus above board size), the position needs to be reset.
-        self.position_from_own_start = (self.position_from_own_start + board_size) % board_size
-
     def _update_pawn_positions_by_move_value(self, move_value, board_size):
         self.position_at_start_of_turn = self.position
-        self.position += move_value
-        self._check_for_finish(board_size)
+        self.position = (self.position + move_value) % board_size
+        self._check_for_finish(move_value, board_size)
         self._check_for_negative_position(board_size)
         self._check_for_protection_from_own_0()
 
@@ -75,10 +85,9 @@ class Pawn:
                 self.home_at_start_of_turn = self.home
                 self.home = False
                 self.position_at_start_of_turn = self.position
-                self.position = 0
-                self._check_for_finish(game_info.board_size)
-                self._check_for_negative_position(game_info.board_size)
-                self._check_for_protection_from_own_0()
+                self.position = self.start_position
+                move_value = 0
+                self._update_pawn_positions_by_move_value(move_value, game_info.board_size)
             else:
                 move_value = 1
                 self._update_pawn_positions_by_move_value(move_value, game_info.board_size)
@@ -91,34 +100,17 @@ class Pawn:
         elif card.rank == 'J':
             self.position_at_start_of_turn = self.position
             self.position = jack_other_pawn_position
-            self._set_position_from_own_start_after_jack(game_info.board_size)
-            self._check_for_finish(game_info.board_size)
-            self._check_for_negative_position(game_info.board_size)
-            self._check_for_protection_from_own_0()
+            self._update_pawn_positions_by_move_value(card.move_value, game_info.board_size)
         elif card.rank == 'K':
             if self.home:
                 self.home_at_start_of_turn = self.home
                 self.home = False
                 self.position_at_start_of_turn = self.position
                 self.position = 0
-                self._check_for_finish(game_info.board_size)
-                self._check_for_negative_position(game_info.board_size)
-                self._check_for_protection_from_own_0()
+                self._update_pawn_positions_by_move_value(card.move_value, game_info.board_size)
             else:
                 # This play would change nothing and is hence undetectable by is_card_play_legal. To detect the illegal
                 # play, we set to None
                 self.home_at_start_of_turn = None
         else:
             self._update_pawn_positions_by_move_value(card.move_value, game_info.board_size)
-
-    def set_position_relative_to_current_player(self, current_player, game_info):
-        if self.color != current_player.color:
-            pawn_turn_relative_to_player = (
-                    (game_info.player_colors_in_start_order.index(self.color) -
-                     game_info.player_colors_in_start_order.index(current_player.color)) %
-                    len(game_info.player_colors_in_start_order))
-            self.position = (self.position_from_own_start + 16 * pawn_turn_relative_to_player) % game_info.board_size
-            self.position_at_start_of_turn = self.position
-        else:
-            self.position = self.position_from_own_start
-            self.position_at_start_of_turn = self.position

@@ -49,9 +49,6 @@ if __name__ == "__main__":
                     client_card_play_dict = sockets_to_clients.receive_from_a_client(player_index)
                     logger.info(client_card_play_dict)
 
-                    # Define other_pawns and set pawn.position to the position from the current players POV
-                    players.set_pawns_to_current_player_point_of_view(current_player, game_info)
-
                     print_player_view(current_player, players, game_info)
                     view_client_card_play(client_card_play_dict)
 
