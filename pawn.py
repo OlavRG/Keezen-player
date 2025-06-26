@@ -1,4 +1,3 @@
-
 class Pawn:
     def __init__(self, color, position, start_position, home, finish, protected):
         self.color = color
