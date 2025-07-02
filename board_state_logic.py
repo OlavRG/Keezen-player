@@ -40,25 +40,18 @@ def create_game_objects_from_board_state(board_state):
 
     # Add pawns to players
     for pawn in board_state["pawns"]:
-        if pawn["position"] == 0 or pawn["finish"]:
+        start_position = game_info.player_colors_in_start_order.index(pawn.color) * game_info.board_size_per_player
+        if pawn["position"] == start_position or pawn["finish"]:
             is_protected = True
         else:
             is_protected = False
-        start_position = game_info.player_colors_in_start_order.index(pawn.color) * game_info.board_size_per_player
         if pawn["color"] == current_player.color:
-            if pawn["finish"] and pawn["position"] in range(0, 4):
-                pawn["position"] = pawn["position"] + game_info.board_size
             current_player.pawns.append(
                 Pawn(pawn["color"], pawn["position"], start_position, pawn["home"], pawn["finish"], is_protected))
         elif pawn["color"] != current_player.color:
-            pawn_turn_relative_to_player = ((game_info.player_colors_in_start_order.index(pawn["color"]) -
-                                             game_info.player_colors_in_start_order.index(current_player.color)) %
-                                            game_info.player_count)
-            position_relative_to_player_start = pawn["position"] + 16 * pawn_turn_relative_to_player
-            position_relative_to_player_start = position_relative_to_player_start % game_info.board_size
             relevant_player = next((player for player in players if player.color == pawn["color"]), None)
             relevant_player.pawns.append(
-                Pawn(pawn["color"], position_relative_to_player_start, start_position, pawn["home"], pawn["finish"],
+                Pawn(pawn["color"], pawn["position"], start_position, pawn["home"], pawn["finish"],
                      is_protected))
     return current_player, players, discard_pile, game_info
 
@@ -101,10 +94,10 @@ def create_starting_game_objects(n_players):
     for player_n, color in enumerate(game_info.player_colors_in_start_order):
         players.append(Player(color))
         start_position = player_n * game_info.board_size_per_player
-        players[player_n].pawns.append(Pawn(color, 0, start_position, home=True, finish=False, protected=True))
-        players[player_n].pawns.append(Pawn(color, 0, start_position, home=True, finish=False, protected=True))
-        players[player_n].pawns.append(Pawn(color, 0, start_position, home=True, finish=False, protected=True))
-        players[player_n].pawns.append(Pawn(color, 0, start_position, home=True, finish=False, protected=True))
+        players[player_n].pawns.append(Pawn(color, start_position, start_position, home=True, finish=False, protected=True))
+        players[player_n].pawns.append(Pawn(color, start_position, start_position, home=True, finish=False, protected=True))
+        players[player_n].pawns.append(Pawn(color, start_position, start_position, home=True, finish=False, protected=True))
+        players[player_n].pawns.append(Pawn(color, start_position, start_position, home=True, finish=False, protected=True))
     return players, deck, discard_pile, game_info
 
 
@@ -124,7 +117,7 @@ def create_board_states_per_client(players, deck, game_info):
         card_history.append({"color": players[n_player].color, "card_history": players[n_player].card_history})
         board_states[n_player]["card_history"] = card_history
         for pawn in players[n_player].pawns:
-            pawns.append({"color": pawn.color, "position": pawn.position_from_own_start % game_info.board_size,
+            pawns.append({"color": pawn.color, "position": pawn.position,
                           "home": pawn.home, "finish": pawn.finish})
         board_states[n_player]["pawns"] = pawns
         board_states[n_player]["player_colors_in_start_order"] = game_info.player_colors_in_start_order
