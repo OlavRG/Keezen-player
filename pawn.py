@@ -105,7 +105,7 @@ class Pawn:
                 self.home_at_start_of_turn = self.home
                 self.home = False
                 self.position_at_start_of_turn = self.position
-                self.position = 0
+                self.position = self.start_position
                 self._update_pawn_positions_by_move_value(card.move_value, game_info.board_size)
             else:
                 # This play would change nothing and is hence undetectable by is_card_play_legal. To detect the illegal
