@@ -15,7 +15,8 @@ from player import Player
 
 def check_for_tackled_pawn_and_move_them_home(my_pawn, players):
     for target_pawn in [pawn for pawn in players.all_pawns if pawn != my_pawn]:
-        if my_pawn.position == target_pawn.position and not target_pawn.finish: # finish should be implemented better
+        if my_pawn.position == target_pawn.position and not my_pawn.home and not my_pawn.finish \
+            and not target_pawn.home and not target_pawn.finish:
             target_pawn.move_home()
 
 
@@ -173,22 +174,22 @@ def card_play_to_dict(card_play: dict):
         return card_play_dict
     if card_play["secondary_pawn"]:
         secondary_pawn_color = card_play["secondary_pawn"].color
-        secondary_pawn_position_from_own_start = card_play["secondary_pawn"].position_from_own_start
+        secondary_pawn_position = card_play["secondary_pawn"].position
         secondary_pawn_home = card_play["secondary_pawn"].home
         secondary_pawn_finish = card_play["secondary_pawn"].finish
     else:
         secondary_pawn_color = None
-        secondary_pawn_position_from_own_start = None
+        secondary_pawn_position = None
         secondary_pawn_home = None
         secondary_pawn_finish = None
     # primary_pawn_home is needed to distinguish between pawns at position 0 on the board and at home
     card_play_dict = {"card": card_play["card"].rank,
                       "primary_pawn_color": card_play["primary_pawn"].color,
-                      "primary_pawn_position": card_play["primary_pawn"].position_from_own_start,
+                      "primary_pawn_position": card_play["primary_pawn"].position,
                       "primary_pawn_home": card_play["primary_pawn"].home,
                       "primary_pawn_finish": card_play["primary_pawn"].finish,
                       "secondary_pawn_color": secondary_pawn_color,
-                      "secondary_pawn_position": secondary_pawn_position_from_own_start,
+                      "secondary_pawn_position": secondary_pawn_position,
                       "secondary_pawn_home": secondary_pawn_home,
                       "secondary_pawn_finish": secondary_pawn_finish,
                       "primary_move": card_play["primary_move"]}
@@ -206,10 +207,10 @@ def card_play_dict_to_card_play(card_play_dict, player, players):
         print(f'Player hand: {"".join(card.rank for card in player.hand)}')
         print(error)
     eligible_pawns = [pawn for pawn in player.pawns if pawn.color == card_play_dict["primary_pawn_color"]
-                      and pawn.position_from_own_start == card_play_dict["primary_pawn_position"]]
-    my_pawn = eligible_pawns[0] # pawns can have identical position when they are home
+                      and pawn.position == card_play_dict["primary_pawn_position"]]
+    my_pawn = eligible_pawns[0]
     eligible_target_pawns = [pawn for pawn in players.all_pawns if pawn.color == card_play_dict["secondary_pawn_color"]
-                             and pawn.position_from_own_start == card_play_dict["secondary_pawn_position"]]
+                             and pawn.position == card_play_dict["secondary_pawn_position"]]
     try:
         target_pawn = eligible_target_pawns[0]
     except IndexError as error:
