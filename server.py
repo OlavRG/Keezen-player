@@ -11,7 +11,7 @@ from card_play_logic import test_all_possible_plays
 from card_play_logic import card_play_to_dict
 from card_play_logic import do_card_play_and_resolve_outcome
 from card_play_logic import move_card_from_hand_to_discard_and_mark_in_player_card_history
-from card_play_logic import is_card_play_legal
+from card_play_logic import is_client_card_play_legal
 from card_play_logic import card_play_dict_to_card_play
 from client_view import print_player_view
 from server_CLI_view import how_many_players_in_game, view_client_card_play
@@ -55,8 +55,8 @@ if __name__ == "__main__":
                     sockets_to_clients.send_same_message_to_each_client(
                         'client_card_play_dict', client_card_play_dict)
 
-                    client_card_play_dict_is_legal = is_card_play_legal(current_player, players, game_info,
-                                                                        client_card_play_dict)
+                    client_card_play_dict_is_legal = is_client_card_play_legal(current_player, players, game_info,
+                                                                               client_card_play_dict)
                     # If the play is legal and player does not wish to discard their hand.
                     if client_card_play_dict_is_legal and client_card_play_dict["card"] is not None:
                         # Print that the play is deemed legal
