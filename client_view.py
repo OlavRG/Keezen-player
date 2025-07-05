@@ -92,12 +92,10 @@ def print_player_view(player, players, game_info):
         print(f"{player_color.upper()[:8]: <8}\t", end="|")
         for finish_position in range(4):
             if (finish_position in
-                    [pawn.position_from_own_start % game_info.board_size_per_player
-                     for pawn in all_pawns_in_finish_of_this_color]):
+                    [pawn.position for pawn in all_pawns_in_finish_of_this_color]):
                 print(f"{player_color.casefold()[:6]: <6}\t", end="|")
             elif player_color == player.color:
-                finish_position_from_own_start = str(finish_position + game_info.board_size)
-                print(f"{finish_position_from_own_start.casefold()[:6]: <6}\t", end="|")
+                print(f"{finish_position.casefold()[:6]: <6}\t", end="|")
             else:
                 print("\t", end="|")
         print("")  # this adds an enter after every line
