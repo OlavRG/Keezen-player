@@ -95,7 +95,7 @@ def print_player_view(player, players, game_info):
                     [pawn.position for pawn in all_pawns_in_finish_of_this_color]):
                 print(f"{player_color.casefold()[:6]: <6}\t", end="|")
             elif player_color == player.color:
-                print(f"{finish_position.casefold()[:6]: <6}\t", end="|")
+                print(f"{str(finish_position)[:6]: <6}\t", end="|")
             else:
                 print("\t", end="|")
         print("")  # this adds an enter after every line

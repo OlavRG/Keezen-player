@@ -40,7 +40,7 @@ def create_game_objects_from_board_state(board_state):
 
     # Add pawns to players
     for pawn in board_state["pawns"]:
-        start_position = game_info.player_colors_in_start_order.index(pawn.color) * game_info.board_size_per_player
+        start_position = game_info.player_colors_in_start_order.index(pawn["color"]) * game_info.board_size_per_player
         if pawn["position"] == start_position or pawn["finish"]:
             is_protected = True
         else:

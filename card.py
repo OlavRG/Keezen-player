@@ -3,6 +3,8 @@ class Card():
         self.rank = rank
         self.suit = suit
         self.is_splittable = False
+        self.swaps_pawns = False
+        self.moves_pawn_from_home = False
         self.move_value = 0
         if rank == 'A':
             self.move_value = 1
@@ -30,10 +32,12 @@ class Card():
 
         if rank == 'J':
             self.move_value = 0
+            self.swaps_pawns = True
 
         if rank == 'Q':
             self.move_value = 12
 
         if rank == 'K':
             self.move_value = 0
+            self.moves_pawn_from_home = True
 

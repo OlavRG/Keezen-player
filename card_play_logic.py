@@ -6,7 +6,7 @@
 
 from is_pawn_move_legal import is_pawn_move_legal
 from is_pawn_move_legal import is_move_by_jack_legal
-from is_card_legal_for_target_pawn_position import is_card_legal_for_target_pawn_position
+from is_card_play_not_illegal_by_definition import is_card_play_not_illegal_by_definition
 import copy
 from board_value import get_board_value
 from card import Card
@@ -15,7 +15,7 @@ from game_info import GameInfo
 from player import Player
 
 
-def check_for_tackled_pawn_and_move_them_home(my_pawn, players):
+def check_for_tackled_pawn_and_move_them_home(my_pawn: Pawn, players):
     for target_pawn in [pawn for pawn in players.all_pawns if pawn != my_pawn]:
         if my_pawn.position == target_pawn.position and not my_pawn.home and not my_pawn.finish \
             and not target_pawn.home and not target_pawn.finish:
@@ -29,58 +29,71 @@ def create_card_play(card, my_pawn, target_pawn=None, move_value=None, card_play
             "board_value": board_value}
 
 
-def interpret_moves_from_card_and_pawn(pawn, card, move_from_7=None):
-    pawn_is_moved_from_home_to_board = False
-    jack_is_played = False
-    steps_to_move = card.move_value
-    if card.rank == 'A':
-        if pawn.home:
+def interpret_moves_from_card_play(card_play):
+
+    swaps_pawns = card_play["card"].swaps_pawns
+    steps_to_move = card_play["card"].move_value
+    moves_pawn_from_home = card_play["card"].moves_pawn_from_home
+    position_1 = card_play["primary_pawn"].position
+    if card_play["card"].rank == 'A':
+        if card_play["primary_pawn"].home:
             steps_to_move = 0
-            pawn_is_moved_from_home_to_board = True
+            moves_pawn_from_home = True
         else:
             steps_to_move = 1
-    elif card.is_splittable:
-        if move_from_7:
-            steps_to_move = move_from_7
-        else:
-            pass
-    elif card.rank == 'J':
-        jack_is_played = True
-    elif card.rank == 'K':
-        pawn_is_moved_from_home_to_board = True
     else:
         pass
-    movement_summary = {"steps_to_move": steps_to_move,
-                        "pawn_is_moved_from_home_to_board": pawn_is_moved_from_home_to_board,
-                        "jack_is_played": jack_is_played}
-    return movement_summary
+
+    if card_play["secondary_pawn"]:
+        if card_play["card"].is_splittable and card_play["primary_move"]:
+            steps_to_move = card_play["primary_move"]
+            steps_to_move2 = card_play["card"].move_value - card_play["primary_move"]
+        else:
+            steps_to_move2 = 0
+        if card_play["card"].swaps_pawns:
+            position_2 = card_play["secondary_pawn"].position
+        else:
+            position_2 = None
+
+        movement_summary2 = {"steps_to_move": steps_to_move2,
+                             "moves_pawn_from_home": moves_pawn_from_home,
+                             "swaps_pawns": swaps_pawns,
+                             "swap_destination": position_1}
+    else:
+        movement_summary2 = None
+        position_2 = None
+
+    movement_summary1 = {"steps_to_move": steps_to_move,
+                        "moves_pawn_from_home": moves_pawn_from_home,
+                        "swaps_pawns": swaps_pawns,
+                        "swap_destination": position_2}
 
 
-def move_pawn_and_check_legality(pawn, card, players, game_info, move_from_7=None, secondary_pawn_position=None):
-    # summarize all move actions
-    movement_summary = interpret_moves_from_card_and_pawn(pawn, card, move_from_7=move_from_7)
+    return movement_summary1, movement_summary2
 
+
+def move_pawn_and_check_legality(pawn, movement_summary, players, game_info: GameInfo):
     move_to_board_is_legal = True
     move_by_jack_is_legal = True
     pawn_step_is_legal = True
 
     # move pawn to board and check legality
-    if movement_summary["pawn_is_moved_from_home_to_board"]:
+    if movement_summary["moves_pawn_from_home"]:
         pawn.move_from_home_to_board()
         move_to_board_is_legal = is_pawn_move_legal(pawn, players, game_info)
     else:
         pass
 
     # Swap pawns with Jack and check legality
-    if movement_summary["jack_is_played"]:
+    if movement_summary["swaps_pawns"]:
         # check if this pawn is protected before move
         move_by_jack_is_legal = is_move_by_jack_legal(pawn)
-        pawn.move_by_jack(secondary_pawn_position)
+        pawn.move_by_jack(movement_summary["swap_destination"])
 
     # Take steps and check legality per step
     if movement_summary["steps_to_move"] >= 0: increment_is_positive = True
     else: increment_is_positive = False
-    for step in movement_summary["steps_to_move"]:
+    for step in range(movement_summary["steps_to_move"]):
         pawn.move_by_increment(increment_is_positive, game_info.board_size)
         if is_pawn_move_legal(pawn, players, game_info):
             pawn_step_is_legal = True
@@ -95,34 +108,23 @@ def move_pawn_and_check_legality(pawn, card, players, game_info, move_from_7=Non
 def do_card_play_and_resolve_outcome(card_play, player, players,
                                      game_info, card_plays_on_pawns_and_outcomes):
 
-    # Check if two pawns are moved and set move_2 accordingly
-    if card_play["primary_move"]:
-        move_2 = card_play["card"].move_value - card_play["primary_move"]
-    else:
-        move_2 = 0
-
-    # Save initial pawn positions in case a jack is played
-    position_1 = card_play["primary_pawn"].position
-    if card_play["secondary_pawn"]:
-        position_2 = card_play["secondary_pawn"].position
-    else:
-        position_2 = None
+    # summarize all move actions
+    movement_summary1, movement_summary2 = interpret_moves_from_card_play(card_play)
 
     # move pawn and check if move is legal
-    card_play_is_legal_p1 = move_pawn_and_check_legality(card_play["primary_pawn"], card_play["card"],
-                                                         players, game_info, move_from_7=card_play["primary_move"],
-                                                         secondary_pawn_position=position_2)
-    if card_play["secondary_pawn"]:
-        card_play_is_legal_p2 = move_pawn_and_check_legality(card_play["secondary_pawn"], card_play["card"],
-                                                             players, game_info, move_from_7=move_2,
-                                                             secondary_pawn_position=position_1)
+    card_play_is_legal_p1 = move_pawn_and_check_legality(card_play["primary_pawn"], movement_summary1, players,
+                                                         game_info)
+
+    if movement_summary2:
+        card_play_is_legal_p2 = move_pawn_and_check_legality(card_play["secondary_pawn"], movement_summary2, players,
+                                                             game_info)
     else:
         card_play_is_legal_p2 = True
 
     # check if card play is illegal by default (like a J on a single pawn, or a 2-Q on a pawn with home==True)
-    card_is_legal_for_target_pawn_position = is_card_legal_for_target_pawn_position(card_play)
+    card_play_is_not_illegal_by_definition = is_card_play_not_illegal_by_definition(card_play, player)
 
-    card_play_is_legal = card_play_is_legal_p1 & card_play_is_legal_p2 & card_is_legal_for_target_pawn_position
+    card_play_is_legal = card_play_is_legal_p1 & card_play_is_legal_p2 & card_play_is_not_illegal_by_definition
 
     # If a pawn was tackled during move, move it off the board here. This must be done after card_play_is_legal, since
     # that function checks for protected pawns being illegally tackled
