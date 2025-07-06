@@ -16,8 +16,11 @@ def move_outside_finish_position(my_pawn, game_info):
 
 def move_onto_protected_pawn(my_pawn, players):
     legal = True
-    for other_pawn in players.all_pawns:
-        if my_pawn.position == other_pawn.position and other_pawn.is_protected:
+    all_other_pawns = [pawn for pawn in players.all_pawns if pawn != my_pawn]
+    for other_pawn in all_other_pawns:
+        if (my_pawn.position == other_pawn.position and
+                my_pawn.home == other_pawn.home == False and
+                other_pawn.is_protected):
             if my_pawn.finish == False and other_pawn.finish == False: # look for pawns on the board outside finish
                 legal = False
                 return legal
