@@ -93,7 +93,7 @@ def move_pawn_and_check_legality(pawn, movement_summary, players, game_info: Gam
     # Take steps and check legality per step
     if movement_summary["steps_to_move"] >= 0: increment_is_positive = True
     else: increment_is_positive = False
-    for step in range(movement_summary["steps_to_move"]):
+    for step in range(abs(movement_summary["steps_to_move"])):
         pawn.move_by_increment(increment_is_positive, game_info.board_size)
         if is_pawn_move_legal(pawn, players, game_info):
             pawn_step_is_legal = True
@@ -108,6 +108,9 @@ def move_pawn_and_check_legality(pawn, movement_summary, players, game_info: Gam
 def do_card_play_and_resolve_outcome(card_play, player, players,
                                      game_info, card_plays_on_pawns_and_outcomes):
 
+    # check if card play is illegal by default (like a J on a single pawn, or a 2-Q on a pawn with home==True)
+    card_play_is_not_illegal_by_definition = is_card_play_not_illegal_by_definition(card_play, player)
+
     # summarize all move actions
     movement_summary1, movement_summary2 = interpret_moves_from_card_play(card_play)
 
@@ -120,9 +123,6 @@ def do_card_play_and_resolve_outcome(card_play, player, players,
                                                              game_info)
     else:
         card_play_is_legal_p2 = True
-
-    # check if card play is illegal by default (like a J on a single pawn, or a 2-Q on a pawn with home==True)
-    card_play_is_not_illegal_by_definition = is_card_play_not_illegal_by_definition(card_play, player)
 
     card_play_is_legal = card_play_is_legal_p1 & card_play_is_legal_p2 & card_play_is_not_illegal_by_definition
 

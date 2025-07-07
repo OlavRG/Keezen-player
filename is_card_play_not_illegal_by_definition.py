@@ -58,10 +58,8 @@ def play_card_on_pawn_at_home(card_play):
     # This makes 7s played on a secondary target at home illegal. Or long: The next clause checks if a secondary pawn
     # has non-zero move from a splittable-card, and that if that secondary pawn is at home,
     # then playing this card is illegal.
-    elif (card_play["secondary_pawn"] and card_play["secondary_pawn"].home and
-          card_play["card"].moves_pawn_from_home == False and
-          card_play["primary_move"] and card_play["card"].is_splittable and
-          card_play["card"].move_value != card_play["primary_move"]):
+    elif (card_play["secondary_pawn"].home and card_play["card"].moves_pawn_from_home == False and
+          not card_play["card"].rank == "A"):
         legal = False
         return legal
     else:
