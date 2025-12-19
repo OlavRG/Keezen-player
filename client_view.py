@@ -183,7 +183,7 @@ def pick_card_play(player, players, game_info):
     else:
         move_value = card.move_value
     card_play = create_card_play(card, my_pawn, target_pawn, move_value, card_play_is_legal=True, board_value=0)
-    card_play_dict = card_play_to_dict([card_play])
+    card_play_dict = card_play_to_dict(card_play)
     return card_play_dict
 
     # NExt: change this into a GUI, most likely as an object
