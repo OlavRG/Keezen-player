@@ -97,7 +97,7 @@ def print_player_view(player, players, game_info):
             elif player_color == player.color:
                 print(f"{str(finish_position)[:6]: <6}\t", end="|")
             else:
-                print("\t", end="|")
+                print("\t\t", end="|")
         print("")  # this adds an enter after every line
     print('\n' + player.color + ' hand: ' + ''.join(card.rank for card in player.hand))
 
