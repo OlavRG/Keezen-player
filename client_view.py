@@ -60,17 +60,15 @@ def does_player_want_to_play():
 def print_player_view(player, players, game_info):
     # Determine player order from clients view
     client_index = game_info.player_colors_in_start_order.index(player.color)
-    player_colors_in_turn_order = game_info.player_colors_in_start_order[client_index:] + game_info.player_colors_in_start_order[:client_index]
     all_pawns_on_board = [pawn for pawn in players.all_pawns if not pawn.home and not pawn.finish]
     positions_of_all_pawns_on_board = [pawn.position for pawn in all_pawns_on_board]
 
     print(f"\n==========================={player.color.upper()}'s turn===========================")
     print("\nSTART\t\t|BOARD")
-    for player_color in player_colors_in_turn_order:
-        player_turn_index = player_colors_in_turn_order.index(player_color)
+    for player_index, player_color in enumerate(game_info.player_colors_in_start_order):
         print(f"{player_color.upper()[:8]: <8}\t", end="|")
         for position_from_player_color_start in range(16):
-            position = position_from_player_color_start + 16*player_turn_index
+            position = position_from_player_color_start + 16*player_index
             if position in positions_of_all_pawns_on_board:
                 pawn_index = positions_of_all_pawns_on_board.index(position)
                 # Color strings are limited to 6 characters such that
@@ -86,9 +84,8 @@ def print_player_view(player, players, game_info):
 
     # Now for pawns in finish
     print("\nFINISH")
-    for player_color in player_colors_in_turn_order:
+    for player_index, player_color in enumerate(game_info.player_colors_in_start_order):
         all_pawns_in_finish_of_this_color = [pawn for pawn in players.all_pawns if pawn.finish and pawn.color == player_color]
-        player_turn_index = player_colors_in_turn_order.index(player_color)
         print(f"{player_color.upper()[:8]: <8}\t", end="|")
         for finish_position in range(4):
             if (finish_position in

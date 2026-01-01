@@ -24,12 +24,13 @@ def get_board_value(my_pawns, game_info):
 
     start_position = my_pawns[0].start_position
     position_values = [0] * game_info.board_size * 3  # create extra space to prevent index errors of moves past board_size
+    finish_values = [0] * game_info.board_size
 
     # Assign values
     position_values[0:game_info.board_size-1] = [1 * game_info.board_size + ((position - start_position) % game_info.board_size) for position in range(game_info.board_size)]
-    position_values[start_position] = 2 * game_info.board_size - 2 * game_info.pawns_per_player + 1
+    position_values[start_position] = 2 * game_info.board_size - 2 * game_info.board_size_per_player + 1
 
-    finish_values = [2 * game_info.board_size + n * game_info.board_size_per_player for n in range(1, game_info.pawns_per_player+1)]
+    finish_values[0:game_info.pawns_per_player-1] = [2 * game_info.board_size + n * game_info.board_size_per_player for n in range(1, game_info.pawns_per_player+1)]
 
     board_value = 0
     for pawn in my_pawns:
