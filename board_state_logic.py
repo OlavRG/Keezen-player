@@ -107,16 +107,16 @@ def create_board_states_per_client(players, deck, game_info):
     hand_size = []
     pawns = []
     card_history = []
-    for n_player in range(0, len(players)):
-        hands[n_player] = ''.join(card.rank for card in players[n_player].hand)
+    for n_player, player in enumerate(players):
+        hands[n_player] = ''.join(card.rank for card in player.hand)
         board_states[n_player]["hand"] = hands[n_player]
-        hand_size.append({"color": players[n_player].color, "hand_size": len(players[n_player].hand)})
+        hand_size.append({"color": player.color, "hand_size": len(player.hand)})
         board_states[n_player]["hand_size"] = hand_size
-        board_states[n_player]["my_color"] = players[n_player].color
+        board_states[n_player]["my_color"] = player.color
         board_states[n_player]["current_player_color"] = ''
-        card_history.append({"color": players[n_player].color, "card_history": players[n_player].card_history})
+        card_history.append({"color": player.color, "card_history": player.card_history})
         board_states[n_player]["card_history"] = card_history
-        for pawn in players[n_player].pawns:
+        for pawn in player.pawns:
             pawns.append({"color": pawn.color, "position": pawn.position,
                           "home": pawn.home, "finish": pawn.finish})
         board_states[n_player]["pawns"] = pawns

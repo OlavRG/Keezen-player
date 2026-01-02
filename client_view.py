@@ -57,13 +57,12 @@ def does_player_want_to_play():
     return player_wants_to_play
 
 
-def print_player_view(player, players, game_info):
+def print_player_view(player, current_player, players, game_info):
     # Determine player order from clients view
-    client_index = game_info.player_colors_in_start_order.index(player.color)
     all_pawns_on_board = [pawn for pawn in players.all_pawns if not pawn.home and not pawn.finish]
     positions_of_all_pawns_on_board = [pawn.position for pawn in all_pawns_on_board]
 
-    print(f"\n==========================={player.color.upper()}'s turn===========================")
+    print(f"\n==========================={current_player.color.upper()}'s turn===========================")
     print("\nSTART\t\t|BOARD")
     for player_index, player_color in enumerate(game_info.player_colors_in_start_order):
         print(f"{player_color.upper()[:8]: <8}\t", end="|")
@@ -91,10 +90,8 @@ def print_player_view(player, players, game_info):
             if (finish_position in
                     [pawn.position for pawn in all_pawns_in_finish_of_this_color]):
                 print(f"{player_color.casefold()[:6]: <6}\t", end="|")
-            elif player_color == player.color:
-                print(f"{str(finish_position)[:6]: <6}\t", end="|")
             else:
-                print("\t\t", end="|")
+                print(f"{str(finish_position)[:6]: <6}\t", end="|")
         print("")  # this adds an enter after every line
     print('\n' + player.color + ' hand: ' + ''.join(card.rank for card in player.hand))
 
