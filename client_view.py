@@ -57,17 +57,23 @@ def does_player_want_to_play():
     return player_wants_to_play
 
 
-def print_player_view(player, current_player, players, game_info):
+def print_player_view(client_player, players, game_info):
     # Determine player order from clients view
     all_pawns_on_board = [pawn for pawn in players.all_pawns if not pawn.home and not pawn.finish]
     positions_of_all_pawns_on_board = [pawn.position for pawn in all_pawns_on_board]
+
+    # Determine who's turn it currently is
+    largest_hand_size = max([player.hand_size for player in players])
+    player_color for player_color in game_info.player_colors_in_round_order if players
+
+    current_player = (player for player in players if )
 
     print(f"\n==========================={current_player.color.upper()}'s turn===========================")
     print("\nSTART\t\t|BOARD")
     for player_index, player_color in enumerate(game_info.player_colors_in_start_order):
         print(f"{player_color.upper()[:8]: <8}\t", end="|")
-        for position_from_player_color_start in range(16):
-            position = position_from_player_color_start + 16*player_index
+        for position_from_player_color_start in range(game_info.board_size_per_player):
+            position = position_from_player_color_start + game_info.board_size_per_player*player_index
             if position in positions_of_all_pawns_on_board:
                 pawn_index = positions_of_all_pawns_on_board.index(position)
                 # Color strings are limited to 6 characters such that
@@ -93,7 +99,7 @@ def print_player_view(player, current_player, players, game_info):
             else:
                 print(f"{str(finish_position)[:6]: <6}\t", end="|")
         print("")  # this adds an enter after every line
-    print('\n' + player.color + ' hand: ' + ''.join(card.rank for card in player.hand))
+    print('\n' + client_player.color + ' hand: ' + ''.join(card.rank for card in client_player.hand))
 
 
 def pick_a_pawn(player, players, game_info, my_pawn):

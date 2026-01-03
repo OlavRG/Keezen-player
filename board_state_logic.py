@@ -14,8 +14,6 @@ import random
 
 
 def create_game_objects_from_board_state(board_state):
-    # Note that hand size for not current_player is not yet added. Maybe simply add blind cards to hand like Card('_')
-
     # Create game_info.
     game_info = GameInfo(board_state["player_colors_in_start_order"], board_state["player_colors_in_round_order"])
 
@@ -23,13 +21,14 @@ def create_game_objects_from_board_state(board_state):
     discard_pile_card_string = ''.join(player_history["card_history"] for player_history in board_state["card_history"])
     discard_pile = [Card(card) for card in discard_pile_card_string]
 
-    # Create all players
+    # Create all players and set played cards and hand size
     players = Players()
     for player_n, color in enumerate(game_info.player_colors_in_start_order):
         players.append(Player(color))
         players[player_n].card_history = ''.join(
             player_history["card_history"] for player_history in board_state["card_history"]
             if player_history["color"] == players[player_n].color)
+        players[player_n].hand_size(hand_size["hand_size"] for hand_size in board_state["hand_sizes"] if hand_size["color"] == color)
 
     # Identify current player
     current_player = next((player for player in players if player.color == board_state["my_color"]), None)
@@ -104,14 +103,14 @@ def create_starting_game_objects(n_players):
 def create_board_states_per_client(players, deck, game_info):
     board_states = [{} for iterator in range(0, len(players))]
     hands = [[] for iterator in range(0, len(players))]
-    hand_size = []
+    hand_sizes = []
     pawns = []
     card_history = []
     for n_player, player in enumerate(players):
         hands[n_player] = ''.join(card.rank for card in player.hand)
         board_states[n_player]["hand"] = hands[n_player]
-        hand_size.append({"color": player.color, "hand_size": len(player.hand)})
-        board_states[n_player]["hand_size"] = hand_size
+        hand_sizes.append({"color": player.color, "hand_size": len(player.hand)})
+        board_states[n_player]["hand_sizes"] = hand_sizes
         board_states[n_player]["my_color"] = player.color
         board_states[n_player]["current_player_color"] = ''
         card_history.append({"color": player.color, "card_history": player.card_history})
@@ -144,7 +143,7 @@ board_state_start = {"pawns": [
     {"color": "White", "position": 2, "home": True, "finish": False},
     {"color": "White", "position": 3, "home": True, "finish": False}],
     "hand": 'A47JQ',
-    "hand_size": [
+    "hand_sizes": [
         {"color": "Blue", "hand_size": 5},
         {"color": "Orange", "hand_size": 5},
         {"color": "Red", "hand_size": 5},

@@ -49,7 +49,7 @@ if __name__ == "__main__":
                     client_card_play_dict = sockets_to_clients.receive_from_a_client(player_index)
                     logger.info(client_card_play_dict)
 
-                    print_player_view(current_player, current_player, players, game_info)
+                    print_player_view(current_player, players, game_info)
                     view_client_card_play(client_card_play_dict)
 
                     sockets_to_clients.send_same_message_to_each_client(

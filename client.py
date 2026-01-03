@@ -19,7 +19,7 @@ def main():
                 [player, players, discard_pile, game_info] = (
                     board_state_logic.create_game_objects_from_board_state(board_state))
 
-                client_view.print_player_view(player, current_player, players, game_info)
+                client_view.print_player_view(player, players, game_info)
 
             case 'play_from_board_state':
                 board_state = message["content"]
