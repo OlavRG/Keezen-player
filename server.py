@@ -1,6 +1,3 @@
-import _thread
-import json
-import random
 import network
 import server_logging
 from board_state_logic import create_starting_game_objects
@@ -37,10 +34,6 @@ if __name__ == "__main__":
             while any([player.hand for player in players]):
                 # turns for each client
                 for player_index, current_player in enumerate(players):
-                    # Update current player in board state
-                    for board_state in board_states:
-                        board_state["current_player_color"] = current_player.color
-
                     # Send board state and cards in hand to all players at start of each turn
                     sockets_to_clients.send_personal_message_to_each_client('view_board_state',
                                                                             board_states)

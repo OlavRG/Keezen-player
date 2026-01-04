@@ -64,9 +64,10 @@ def print_player_view(client_player, players, game_info):
 
     # Determine who's turn it currently is
     largest_hand_size = max([player.hand_size for player in players])
-    player_color for player_color in game_info.player_colors_in_round_order if players
-
-    current_player = (player for player in players if )
+    for player_color in game_info.player_colors_in_round_order:
+        for player in players:
+            if  player.color == player_color and player.hand_size == largest_hand_size:
+                current_player = player
 
     print(f"\n==========================={current_player.color.upper()}'s turn===========================")
     print("\nSTART\t\t|BOARD")

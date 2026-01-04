@@ -28,7 +28,7 @@ def create_game_objects_from_board_state(board_state):
         players[player_n].card_history = ''.join(
             player_history["card_history"] for player_history in board_state["card_history"]
             if player_history["color"] == players[player_n].color)
-        players[player_n].hand_size(hand_size["hand_size"] for hand_size in board_state["hand_sizes"] if hand_size["color"] == color)
+        players[player_n].hand_size = [hand_size["hand_size"] for hand_size in board_state["hand_sizes"] if hand_size["color"] == color][0]
 
     # Identify current player
     current_player = next((player for player in players if player.color == board_state["my_color"]), None)
@@ -112,7 +112,6 @@ def create_board_states_per_client(players, deck, game_info):
         hand_sizes.append({"color": player.color, "hand_size": len(player.hand)})
         board_states[n_player]["hand_sizes"] = hand_sizes
         board_states[n_player]["my_color"] = player.color
-        board_states[n_player]["current_player_color"] = ''
         card_history.append({"color": player.color, "card_history": player.card_history})
         board_states[n_player]["card_history"] = card_history
         for pawn in player.pawns:
@@ -149,7 +148,6 @@ board_state_start = {"pawns": [
         {"color": "Red", "hand_size": 5},
         {"color": "White", "hand_size": 5}],
     "my_color": "Orange",
-    "current_player_color": "",
     "card_history": [
         {"color": "Blue", "card_history": '483JX'},
         {"color": "Orange", "card_history": '483JX'},
