@@ -28,7 +28,9 @@ def create_game_objects_from_board_state(board_state):
         players[player_n].card_history = ''.join(
             player_history["card_history"] for player_history in board_state["card_history"]
             if player_history["color"] == players[player_n].color)
-        players[player_n].hand_size = [hand_size["hand_size"] for hand_size in board_state["hand_sizes"] if hand_size["color"] == color][0]
+        for hand_size in board_state["hand_sizes"]:
+            if hand_size["color"] == color:
+                players[player_n].hand_size = hand_size["hand_size"]
 
     # Identify current player
     current_player = next((player for player in players if player.color == board_state["my_color"]), None)

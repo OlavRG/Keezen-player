@@ -82,7 +82,7 @@ if __name__ == "__main__":
                         worst_card_play_index = legal_card_play_board_values.index(min(legal_card_play_board_values))
                         worst_card_play = legal_card_plays[worst_card_play_index][0]
                         print('Provided card play is illegal. Worst card play was played instead.')
-                        print('Substituted card play: ', card_play_to_dict([worst_card_play]))
+                        print('Substituted card play: ', card_play_to_dict(worst_card_play))
                         do_card_play_and_resolve_outcome(worst_card_play, current_player, players, game_info,
                                                          card_plays_on_pawns_and_outcomes=[])
                         # Discard card from hand

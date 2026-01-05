@@ -57,17 +57,23 @@ def does_player_want_to_play():
     return player_wants_to_play
 
 
+def find_current_player(players, game_info):
+    largest_hand_size = max([player.hand_size for player in players])
+    for player_color in game_info.player_colors_in_round_order:
+        for player in players:
+            if  player.color == player_color and player.hand_size == largest_hand_size:
+                current_player = player
+                return current_player
+    return None
+
+
 def print_player_view(client_player, players, game_info):
     # Determine player order from clients view
     all_pawns_on_board = [pawn for pawn in players.all_pawns if not pawn.home and not pawn.finish]
     positions_of_all_pawns_on_board = [pawn.position for pawn in all_pawns_on_board]
 
     # Determine who's turn it currently is
-    largest_hand_size = max([player.hand_size for player in players])
-    for player_color in game_info.player_colors_in_round_order:
-        for player in players:
-            if  player.color == player_color and player.hand_size == largest_hand_size:
-                current_player = player
+    current_player = find_current_player(players, game_info)
 
     print(f"\n==========================={current_player.color.upper()}'s turn===========================")
     print("\nSTART\t\t|BOARD")
