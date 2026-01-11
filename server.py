@@ -29,7 +29,7 @@ if __name__ == "__main__":
         move_cards_from_discard_to_deck_and_shuffle(deck, discard_pile)
         while deck:
             deal_cards_from_deck_to_players(players, deck, game_info)
-            board_states = create_board_states_per_client(players, deck, game_info)
+            board_states = create_board_states_per_client(players, game_info)
 
             while any([player.hand for player in players]):
                 # turns for each client
@@ -89,7 +89,7 @@ if __name__ == "__main__":
                         move_card_from_hand_to_discard_and_mark_in_player_card_history(current_player,
                                                                                        worst_card_play["card"],
                                                                                        discard_pile)
-                    board_states = create_board_states_per_client(players, deck, game_info)
+                    board_states = create_board_states_per_client(players, game_info)
                     all_pawns_of_current_player_are_in_finish = all([pawn.finish for pawn in current_player.pawns])
                     sockets_to_clients.send_same_message_to_each_client(
                         'all_pawns_of_current_player_are_in_finish', all_pawns_of_current_player_are_in_finish)

@@ -29,17 +29,18 @@ def create_game_objects_from_board_state(board_state):
             player_history["card_history"] for player_history in board_state["card_history"]
             if player_history["color"] == players[player_n].color)
         for hand_size in board_state["hand_sizes"]:
-            if hand_size["color"] == color:
+            if hand_size["color"] == color and hand_size["color"] != board_state["my_color"]:
                 players[player_n].hand_size = hand_size["hand_size"]
 
     # Identify current player
     current_player = next((player for player in players if player.color == board_state["my_color"]), None)
 
-    # Add cards to current player hand
+    # Add cards to current player hand and update hand size
     for card in board_state["hand"]:
         current_player.hand.append(Card(card))
+    current_player.hand_size = len(current_player.hand)
 
-    # Add pawns to players
+        # Add pawns to players
     for pawn in board_state["pawns"]:
         start_position = game_info.player_colors_in_start_order.index(pawn["color"]) * game_info.board_size_per_player
         if pawn["position"] == start_position or pawn["finish"]:
@@ -102,17 +103,19 @@ def create_starting_game_objects(n_players):
     return players, deck, discard_pile, game_info
 
 
-def create_board_states_per_client(players, deck, game_info):
+def create_board_states_per_client(players, game_info):
     board_states = [{} for iterator in range(0, len(players))]
     hands = [[] for iterator in range(0, len(players))]
-    hand_sizes = []
+    hand_sizes = [[] for iterator in range(0, len(players))]
     pawns = []
     card_history = []
     for n_player, player in enumerate(players):
         hands[n_player] = ''.join(card.rank for card in player.hand)
         board_states[n_player]["hand"] = hands[n_player]
-        hand_sizes.append({"color": player.color, "hand_size": len(player.hand)})
-        board_states[n_player]["hand_sizes"] = hand_sizes
+        for m_player, _ in enumerate(players):
+            if m_player != n_player:
+                hand_sizes[m_player].append({"color": player.color, "hand_size": len(player.hand)})
+        board_states[n_player]["hand_sizes"] = hand_sizes[n_player]
         board_states[n_player]["my_color"] = player.color
         card_history.append({"color": player.color, "card_history": player.card_history})
         board_states[n_player]["card_history"] = card_history
@@ -122,7 +125,9 @@ def create_board_states_per_client(players, deck, game_info):
         board_states[n_player]["pawns"] = pawns
         board_states[n_player]["player_colors_in_start_order"] = game_info.player_colors_in_start_order
         board_states[n_player]["player_colors_in_round_order"] = game_info.player_colors_in_round_order
-    # next: cards left in deck should be added to board state format
+    # next: cards in the discard piles and who discarded them should be added to board state format.
+    # This is necessary because if a player disconnects and then multiple players discard their hands
+    # in different rounds, the disconnected player would have no way to reconstruct who discarded what.
     return board_states
 
 
@@ -146,7 +151,6 @@ board_state_start = {"pawns": [
     "hand": 'A47JQ',
     "hand_sizes": [
         {"color": "Blue", "hand_size": 5},
-        {"color": "Orange", "hand_size": 5},
         {"color": "Red", "hand_size": 5},
         {"color": "White", "hand_size": 5}],
     "my_color": "Orange",
