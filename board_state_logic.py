@@ -28,17 +28,17 @@ def create_game_objects_from_board_state(board_state):
         players[player_n].card_history = ''.join(
             player_history["card_history"] for player_history in board_state["card_history"]
             if player_history["color"] == players[player_n].color)
-        for hand_size in board_state["hand_sizes"]:
-            if hand_size["color"] == color and hand_size["color"] != board_state["my_color"]:
-                players[player_n].hand_size = hand_size["hand_size"]
+        if players[player_n].color == board_state["my_color"]:
+            for card in board_state["hand"]:
+                players[player_n].hand.append(Card(card))
+        else:
+            for hand_size in board_state["hand_sizes"]:
+                if hand_size["color"] == players[player_n].color:
+                    for card_number in range(int(hand_size["hand_size"])):
+                        players[player_n].hand.append('_')
 
     # Identify current player
     current_player = next((player for player in players if player.color == board_state["my_color"]), None)
-
-    # Add cards to current player hand and update hand size
-    for card in board_state["hand"]:
-        current_player.hand.append(Card(card))
-    current_player.hand_size = len(current_player.hand)
 
         # Add pawns to players
     for pawn in board_state["pawns"]:

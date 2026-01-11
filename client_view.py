@@ -58,10 +58,10 @@ def does_player_want_to_play():
 
 
 def find_current_player(players, game_info):
-    largest_hand_size = max([player.hand_size for player in players])
+    largest_hand_size = max([len(player.hand) for player in players])
     for player_color in game_info.player_colors_in_round_order:
         for player in players:
-            if  player.color == player_color and player.hand_size == largest_hand_size:
+            if  player.color == player_color and len(player.hand) == largest_hand_size:
                 current_player = player
                 return current_player
     return None
